@@ -3,7 +3,7 @@
 <head>
     <title>Yo</title>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
-    <!--<script src="http://documentcloud.github.com/underscore/underscore-min.js"></script>-->
+    <script src="http://documentcloud.github.com/underscore/underscore-min.js"></script>
     <script src="http://api.maps.nokia.com/2.2.3/jsl.js?with=all"></script>
     <script>
         var map = (function () {
@@ -108,6 +108,25 @@
 
         var POLL_DELAY = 1000;
         var variables = {};
+        var current_color = 0;
+        var colors = _.shuffle([
+            "#000", "#004", "#008", "#00c",
+            "#040", "#044", "#048", "#04c",
+            "#080", "#084", "#088", "#08c",
+            "#0c0", "#0c4", "#0c8", "#0cc",
+            "#400", "#404", "#408", "#40c",
+            "#440", "#444", "#448", "#44c",
+            "#480", "#484", "#488", "#48c",
+            "#4c0", "#4c4", "#4c8", "#4cc",
+            "#800", "#804", "#808", "#80c",
+            "#840", "#844", "#848", "#84c",
+            "#880", "#884", "#888", "#88c",
+            "#8c0", "#8c4", "#8c8", "#8cc",
+            "#c00", "#c04", "#c08", "#c0c",
+            "#c40", "#c44", "#c48", "#c4c",
+            "#c80", "#c84", "#c88", "#c8c",
+            "#cc0", "#cc4", "#cc8", "#ccc"
+        ]);
 
         function get_label_coordinate(shape) {
             if (shape.coordinate) {
@@ -124,8 +143,9 @@
         function create_variable(variable_info) {
             var points = variable_info.p;
             var shape = points.length == 2
-                ? map.marker(points, "", "#f00", true)
-                : map.line(points, "#00f", 2, true);
+                ? map.marker(points, "", colors[current_color], true)
+                : map.line(points, colors[current_color], 2, true);
+            current_color =(current_color + 1) % colors.length;
             var variable = {shape: shape, label: null};
 
             create_label(variable, variable_info.n);
