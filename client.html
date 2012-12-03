@@ -229,21 +229,23 @@
         }
 
         function is_polling_enabled() {
-            return $("#live").prop("checked");
+            return $("#autoupdate").prop("checked");
         }
 
         function enable_polling() {
-            $("#live")
+            $("#autoupdate")
                 .prop("checked", true)
                 .button("refresh");
+            $("#reload").button({"disabled": true});
 
             request_variables();
         }
 
         function disable_polling() {
-            $("#live")
+            $("#autoupdate")
                 .prop("checked", false)
                 .button("refresh");
+            $("#reload").button({"disabled": false});
         }
 
         $(function () {
@@ -253,8 +255,11 @@
                 .button()
                 .click(request_variables);
 
-            $("#live")
-                .button()
+            $("#autoupdate")
+                .button({
+                    icons: {primary: "ui-icon-refresh"},
+                    text: false
+                })
                 .click(function () {
                     if ($(this).prop("checked")) {
                         enable_polling();
@@ -292,7 +297,7 @@
     <div class="ui-layout-west">
         <div id="controls">
             <button id="reload">Reload</button>
-            <input id="live" type="checkbox" /><label for="live">Live</label>
+            <input id="autoupdate" type="checkbox" /><label for="autoupdate">Auto update</label>
         </div>
         <div id="variables">
         </div>
