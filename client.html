@@ -107,6 +107,8 @@
         })();
 
         var POLL_DELAY = 1000;
+        var LINE_THICKNESS = 4;
+
         var variables = {};
         var current_color = 0;
         var colors = _.shuffle([
@@ -144,7 +146,7 @@
             var points = variable_info.p;
             var shape = points.length == 2
                 ? map.marker(points, "", colors[current_color], true)
-                : map.line(points, colors[current_color], 2, true);
+                : map.line(points, colors[current_color], LINE_THICKNESS, true);
             current_color =(current_color + 1) % colors.length;
             var variable = {shape: shape, label: null};
 
