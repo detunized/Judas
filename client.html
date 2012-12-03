@@ -1,10 +1,20 @@
 <!doctype html>
-<html>
+
+<html lang="en">
 <head>
     <title>Yo</title>
-    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+    <meta charset="utf-8" />
+
+    <link rel="stylesheet" href="http://code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css" />
+
+    <script src="http://code.jquery.com/jquery-1.8.3.min.js"></script>
+    <script src="http://code.jquery.com/ui/1.9.2/jquery-ui.min.js"></script>
+
+    <script src="http://layout.jquery-dev.net/lib/js/jquery.layout-latest.min.js"></script>
+
     <script src="http://documentcloud.github.com/underscore/underscore-min.js"></script>
     <script src="http://api.maps.nokia.com/2.2.3/jsl.js?with=all"></script>
+
     <script>
         var map = (function () {
             var map = {
@@ -177,16 +187,20 @@
         }
 
         function update_variables(received_data) {
+            var variable_names = [];
             var new_variables = {};
             for (var i in received_data) {
                 var v = variables[i];
+                var d = received_data[i];
                 if (v) {
-                    update_variable(v, received_data[i]);
+                    update_variable(v, d);
                 } else {
-                    v = create_variable(received_data[i])
+                    v = create_variable(d)
                 }
                 new_variables[i] = v;
                 delete variables[i];
+
+                variable_names.push(d.n);
             }
 
             for (var i in variables) {
@@ -194,6 +208,8 @@
             }
 
             variables = new_variables;
+
+            $("#variables").html(variable_names.join("<br>"));
         }
 
         function request_variables() {
@@ -207,7 +223,6 @@
                     }
                 },
                 error: function (data) {
-                    console.log("Failed:", data);
                     disable_polling();
                 }
             });
@@ -218,27 +233,42 @@
         }
 
         function enable_polling() {
-            $("#live").prop("checked", true);
+            $("#live")
+                .prop("checked", true)
+                .button("refresh");
+
             request_variables();
         }
 
         function disable_polling() {
-            $("#live").prop("checked", false);
+            $("#live")
+                .prop("checked", false)
+                .button("refresh");
         }
 
         $(function () {
-            $("#reload").click(request_variables);
-            $("#live").click(function () {
-                if ($(this).prop("checked")) {
-                    enable_polling();
-                } else {
-                    disable_polling();
-                }
-            });
+            $('body').layout({west__applyDefaultStyles: true});
+
+            $("#reload")
+                .button()
+                .click(request_variables);
+
+            $("#live")
+                .button()
+                .click(function () {
+                    if ($(this).prop("checked")) {
+                        enable_polling();
+                    } else {
+                        disable_polling();
+                    }
+                });
 
             map.initialize('#map');
 
-            map.map.zoomTo(nokia.maps.geo.BoundingBox.coverAll([map.geo(52.5133, 13.4027), map.geo(52.52799999999999, 13.428)]));
+            map.map.zoomTo(nokia.maps.geo.BoundingBox.coverAll([
+                map.geo(52.5133, 13.4027),
+                map.geo(52.52799999999999, 13.428)
+            ]));
 
             enable_polling();
         });
@@ -255,19 +285,17 @@
             width: 100%;
             height: 100%;
         }
-
-        #controls {
-            position: absolute;
-            left: 0;
-            top: 0;
-        }
     </style>
 </head>
 <body>
-    <div id="map"></div>
-    <div id="controls">
-        <button id="reload">Reload</button>
-        <input id="live" type="checkbox">Live</input>
+    <div id="map" class="ui-layout-center"></div>
+    <div class="ui-layout-west">
+        <div id="controls">
+            <button id="reload">Reload</button>
+            <input id="live" type="checkbox" /><label for="live">Live</label>
+        </div>
+        <div id="variables">
+        </div>
     </div>
 </body>
 </html>
