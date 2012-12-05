@@ -140,6 +140,14 @@
             "#cc0", "#cc4", "#cc8", "#ccc"
         ]);
 
+        var variable_row_template = _.template(
+            "<tr id='var_<%= id %>'>" +
+                "<td><%= n %></td>" +
+                "<td><button id='view_<%= id %>'>View</button></td>" +
+                "<td><button id='pin_<%= id %>'>Pin</button></td>" +
+            "</tr>"
+        );
+
         function get_label_coordinate(shape) {
             if (shape.coordinate) {
                 return shape.coordinate;
@@ -152,7 +160,7 @@
             variable.label = map.bubble(get_label_coordinate(variable.shape), text);
         }
 
-        function create_variable(variable_info) {
+        function create_variable_object(variable_info) {
             var points = variable_info.p;
             var shape = points.length == 2
                 ? map.marker(points, "", colors[current_color], true)
@@ -171,12 +179,12 @@
             return variable;
         }
 
-        function destroy_variable(variable) {
+        function destroy_variable_object(variable) {
             map.remove(variable.shape);
             variable.label.close();
         }
 
-        function update_variable(variable, variable_info) {
+        function update_variable_object(variable, variable_info) {
             var points = variable_info.p;
             if (points.length == 2) {
                 variable.shape.set("coordinate", points);
@@ -186,37 +194,84 @@
             variable.label.set("coordinate", points.slice(0, 2));
         }
 
+        function add_variable(id, variable_info) {
+            var variable = create_variable_object(variable_info);
+
+            // Update UI
+            $("#variable_list").append(variable_row_template(variable_info));
+            $("#view_" + id)
+                .button({
+                    icons: {primary: "ui-icon-zoomin"},
+                    text: false
+                })
+                .click(function () { view_variable(id); });
+            $("#pin_" + id)
+                .button({
+                    icons: {primary: "ui-icon-pin-s"},
+                    text: false
+                })
+                .click(function () { pin_variable(id); });
+
+            return variable;
+        }
+
+        function remove_variable(id, variable) {
+            destroy_variable_object(variable);
+
+            // Update UI
+            $("#var_" + id).remove();
+        }
+
+        // TODO: Use better name
+        function update_variable(id, variable, varialbe_info) {
+            // TODO: Check if variable acually changed
+            update_variable_object(variable, varialbe_info);
+            return variable;
+        }
+
+        function view_variable(id) {
+            map.map.zoomTo(variables[id].shape.getBoundingBox());
+        }
+
+        function pin_variable(id) {
+            // TODO: Pin variable
+            console.log("Pin: " + id);
+        }
+
         function update_variables(received_data) {
-            var variable_names = [];
+            var existing_vars = _.keys(variables);
+            var received_vars = _.keys(received_data);
+
+            var added_vars = _.difference(received_vars, existing_vars);
+            var removed_vars = _.difference(existing_vars, received_vars);
+            var updated_vars = _.intersection(existing_vars, received_vars);
+
             var new_variables = {};
-            for (var i in received_data) {
-                var v = variables[i];
-                var d = received_data[i];
-                if (v) {
-                    update_variable(v, d);
-                } else {
-                    v = create_variable(d)
-                }
-                new_variables[i] = v;
-                delete variables[i];
 
-                variable_names.push(d.n);
-            }
+            // Extend variable info with its id
+            _.each(received_data, function (variable_info, id) {
+                variable_info.id = id;
+            });
 
-            for (var i in variables) {
-                destroy_variable(variables[i]);
-            }
+            _.each(removed_vars, function (i) {
+                remove_variable(i, variables[i]);
+            });
+
+            _.each(updated_vars, function (i) {
+                new_variables[i] = update_variable(i, variables[i], received_data[i]);
+            });
+
+            _.each(added_vars, function (i) {
+                new_variables[i] = add_variable(i, received_data[i]);
+            });
 
             variables = new_variables;
-
-            $("#variables").html(variable_names.join("<br>"));
         }
 
         function request_variables() {
             $.ajax({
                 url: "/lv",
                 success: function (data) {
-                    console.log(data);
                     update_variables(JSON.parse(data));
                     if (is_polling_enabled()) {
                         setTimeout(request_variables, POLL_DELAY);
@@ -248,8 +303,16 @@
             $("#reload").button({"disabled": false});
         }
 
+        function show_all() {
+            if (!_.isEmpty(variables)) {
+                map.map.zoomTo(nokia.maps.geo.BoundingBox.merge(_.map(variables, function (i) {
+                    return i.shape.getBoundingBox();
+                } )));
+            }
+        }
+
         $(function () {
-            $('body').layout({west__applyDefaultStyles: true});
+            $('body').layout({west__applyDefaultStyles: true, west__size: "20%"});
 
             $("#reload")
                 .button()
@@ -266,6 +329,15 @@
                     } else {
                         disable_polling();
                     }
+                });
+
+            $("#show_all")
+                .button({
+                    icons: {primary: "ui-icon-home"},
+                    text: false
+                })
+                .click(function () {
+                    show_all();
                 });
 
             map.initialize('#map');
@@ -290,6 +362,10 @@
             width: 100%;
             height: 100%;
         }
+
+        #variable_list {
+            width: 100%;
+        }
     </style>
 </head>
 <body>
@@ -298,9 +374,10 @@
         <div id="controls">
             <button id="reload">Reload</button>
             <input id="autoupdate" type="checkbox" /><label for="autoupdate">Auto update</label>
+            <button id="show_all">Show All</button>
         </div>
-        <div id="variables">
-        </div>
+        <table id="variable_list">
+        </table>
     </div>
 </body>
 </html>
