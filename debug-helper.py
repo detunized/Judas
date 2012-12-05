@@ -27,7 +27,7 @@ def parse_type_Polyline(value):
 def collect_locals(block, depth, variables):
     for i in block:
         name = i.name
-        unique_name = "%d.%s" % (depth, name)
+        unique_name = "%d_%s" % (depth, name)
         unqualified_type = str(i.type.unqualified())
         parser = "parse_type_%s" % unqualified_type
         if parser in globals():
