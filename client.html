@@ -142,9 +142,9 @@
 
         var variable_row_template = _.template(
             "<tr id='var_<%= id %>'>" +
-                "<td><%= n %></td>" +
-                "<td><button id='view_<%= id %>'>View</button></td>" +
-                "<td><button id='pin_<%= id %>'>Pin</button></td>" +
+                "<td id='name_<%= id %>' class='variable_name'><%= n %></td>" +
+                "<td class='view_cell'><button id='view_<%= id %>'>View</button></td>" +
+                "<td class='pin_cell'><button id='pin_<%= id %>'>Pin</button></td>" +
             "</tr>"
         );
 
@@ -199,6 +199,7 @@
 
             // Update UI
             $("#variable_list").append(variable_row_template(variable_info));
+            $("#name_" + id).click(function () { view_variable(id); });
             $("#view_" + id)
                 .button({
                     icons: {primary: "ui-icon-zoomin"},
@@ -365,6 +366,18 @@
 
         #variable_list {
             width: 100%;
+        }
+
+        .variable_name {
+            padding: 0.4em;
+        }
+
+        .variable_name:hover {
+            background-color: #ddd;
+        }
+
+        .view_cell, .pin_cell {
+            display: none;
         }
     </style>
 </head>
