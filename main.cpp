@@ -18,28 +18,26 @@ public:
 class Polyline
 {
 public:
-    Polyline(size_t count)
-        : count(count)
-        , points(new LatLon[count])
-    {}
+    void add(double lat, double lon)
+    {
+        points.push_back(LatLon(lat, lon));
+    }
 
-    size_t count;
-    LatLon *points;
+    std::vector<LatLon> points;
 };
 
 void f(LatLon p1 = LatLon(52.5247, 13.4237))
 {
-    Polyline line(5);
-    line.points[0].lat = 52.524;
-    line.points[0].lon = 13.423;
+    Polyline line;
+    line.add(52.524, 13.423);
 
-    for (size_t i = 1; i < line.count; ++i)
+    for (size_t i = 0; i < 4; ++i)
     {
-        line.points[i].lat = line.points[i - 1].lat + 0.001;
-        line.points[i].lon = line.points[i - 1].lon + 0.0005 * i;
+        line.add(line.points.back().lat + 0.001,
+                 line.points.back().lon + 0.0005 * (i + 1));
     }
 
-    for (size_t i = 0; i < line.count; ++i)
+    for (size_t i = 0; i < line.points.size(); ++i)
     {
         line.points[i].lat += 0.001;
     }
