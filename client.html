@@ -254,8 +254,10 @@
         }
 
         function update_variable_object(variable, variable_info) {
-            update_variable_shape(variable, variable_info);
-            variable.info = variable_info;
+            if (!_.isEqual(variable_info, variable.info)) {
+                update_variable_shape(variable, variable_info);
+                variable.info = variable_info;
+            }
         }
 
         function add_variable(id, variable_info) {
