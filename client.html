@@ -160,38 +160,102 @@
             variable.label = map.bubble(get_label_coordinate(variable.shape), text);
         }
 
-        function create_variable_object(variable_info) {
+        function create_variable_shape(variable_info) {
             var points = variable_info.p;
-            var shape = points.length == 2
-                ? map.marker(points, "", colors[current_color], true)
-                : map.line(points, colors[current_color], LINE_THICKNESS, true);
-            current_color =(current_color + 1) % colors.length;
-            var variable = {shape: shape, label: null};
+            var shape = null;
+            switch (points.length) {
+            case 0:
+                // Do nothing
+                break;
+            case 2:
+                shape = map.marker(points, "", colors[current_color], true);
+                break;
+            default:
+                shape = map.line(points, colors[current_color], LINE_THICKNESS, true);
+                break;
+            }
 
-            create_label(variable, variable_info.n);
+            if (shape) {
+                current_color = (current_color + 1) % colors.length;
+            }
 
-            shape.addListener("click", function (event) {
-                if (!variable.label || variable.label.getState() === "closed") {
-                    create_label(variable, variable_info.n);
-                }
-            });
+            return shape;
+        }
+
+        function create_variable_object(variable_info) {
+            var variable = {
+                info: variable_info,
+                shape: create_variable_shape(variable_info),
+                label: null
+            };
+
+            if (variable.shape) {
+                create_label(variable, variable_info.n);
+
+                variable.shape.addListener("click", function (event) {
+                    if (!variable.label || variable.label.getState() === "closed") {
+                        create_label(variable, variable_info.n);
+                    }
+                });
+            }
 
             return variable;
         }
 
+        function destroy_variable_shape(variable) {
+            if (variable.shape) {
+                map.remove(variable.shape);
+                variable.shape = null;
+            }
+        }
+
         function destroy_variable_object(variable) {
-            map.remove(variable.shape);
+            destroy_variable_shape(variable);
             variable.label.close();
         }
 
-        function update_variable_object(variable, variable_info) {
+        function update_variable_shape(variable, variable_info) {
             var points = variable_info.p;
-            if (points.length == 2) {
-                variable.shape.set("coordinate", points);
-            } else {
-                variable.shape.set("path", points);
+            switch (points.length) {
+            case 0:
+                destroy_variable_shape(variable);
+                break;
+            case 2:
+                if (variable.shape) {
+                    if (variable.info.p.length == 2) {
+                        variable.shape.set("coordinate", points);
+                    } else {
+                        destroy_variable_shape(variable);
+                    }
+                }
+
+                if (!variable.shape) {
+                    variable.shape = create_variable_shape(variable_info);
+                }
+
+                break;
+            default:
+                if (variable.shape) {
+                    if (variable.info.p.length == 2) {
+                        destroy_variable_shape(variable);
+                    } else {
+                        variable.shape.set("path", points);
+                    }
+                }
+
+                if (!variable.shape) {
+                    variable.shape = create_variable_shape(variable_info);
+                }
             }
-            variable.label.set("coordinate", points.slice(0, 2));
+
+            if (variable.label && points.length >= 2) {
+                variable.label.set("coordinate", points.slice(0, 2));
+            }
+        }
+
+        function update_variable_object(variable, variable_info) {
+            update_variable_shape(variable, variable_info);
+            variable.info = variable_info;
         }
 
         function add_variable(id, variable_info) {
@@ -223,10 +287,9 @@
             $("#var_" + id).remove();
         }
 
-        // TODO: Use better name
-        function update_variable(id, variable, varialbe_info) {
+        function update_variable(id, variable, variable_info) {
             // TODO: Check if variable acually changed
-            update_variable_object(variable, varialbe_info);
+            update_variable_object(variable, variable_info);
             return variable;
         }
 
