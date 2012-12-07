@@ -26,15 +26,14 @@ public:
     std::vector<LatLon> points;
 };
 
-void f(LatLon p1 = LatLon(52.5247, 13.4237))
+void f(LatLon p1 = LatLon(52.5247, 13.4247))
 {
     Polyline line;
     line.add(52.524, 13.423);
 
     for (size_t i = 0; i < 4; ++i)
     {
-        line.add(line.points.back().lat + 0.001,
-                 line.points.back().lon + 0.0005 * (i + 1));
+        line.add(line.points.back().lat + 0.001, line.points.back().lon + 0.0005 * (i + 1));
     }
 
     for (size_t i = 0; i < line.points.size(); ++i)
