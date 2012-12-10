@@ -26,10 +26,16 @@ public:
     std::vector<LatLon> points;
 };
 
+LatLon g_p(52.5237, 13.3037);
+
 void f(LatLon p1 = LatLon(52.5247, 13.4247))
 {
     Polyline line;
     line.add(52.524, 13.423);
+
+    int some_int = 0;
+    float some_float = some_int + 0.5f;
+    char *some_string = "Ahoy, there!";
 
     for (size_t i = 0; i < 4; ++i)
     {
