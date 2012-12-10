@@ -7,15 +7,16 @@ import select
 import threading
 import SocketServer
 
-# TODO: Hide it properly and lock
-__local_variables = {}
+# TODO: Hide these properly and lock!
+__variables = {}
+__watches = set()
 
-def set_local_variables(local_variables):
-    global __local_variables
-    __local_variables = local_variables
+def set_variables(local_variables = {}, watches = {}):
+    global __variables
+    __variables = {"locals": local_variables, "watches": watches}
 
-def get_local_variables():
-    return __local_variables
+def get_variables():
+    return __variables
 
 def parse_type_LatLon(value):
     return [float(value["lat"]), float(value["lon"])]
@@ -26,33 +27,77 @@ def parse_type_Polyline(value):
     size = int(points["_M_finish"] - start)
     return [coord for i in range(size) for coord in parse_type_LatLon(start[i])]
 
-def collect_locals(block, depth, variables):
-    for i in block:
-        name = i.name
-        unique_name = "%d_%s" % (depth, name)
-        unqualified_type = str(i.type.unqualified())
-        parser = "parse_type_%s" % unqualified_type
-        if parser in globals():
-            variables[unique_name] = {
-                "n": name,
-                "t": unqualified_type,
-                "p": globals()[parser](gdb.parse_and_eval(name))
-            }
-    return variables
+def add_watch(expression):
+    global __watches
+    __watches.add(expression)
+
+def parser_for_type(type):
+    return globals().get("parse_type_" + str(type.unqualified()))
+
+def parse_expression(expression, type = None):
+    try:
+        value = None
+
+        if not type:
+            value = gdb.parse_and_eval(expression)
+            type = value.type
+
+        if type:
+            parser = parser_for_type(type)
+            if parser:
+                return {
+                    "n": expression,
+                    "t": str(type.unqualified()),
+                    "p": parser(value if value else gdb.parse_and_eval(expression))
+                }
+    except gdb.error:
+        pass
+
+    return None
 
 def store_locals(event):
-    local_variables = {}
-
+    # Collect blocks up to the function level.
     blocks = []
     block = gdb.selected_frame().block()
     while not (block == None or block.is_static or block.is_global):
         blocks.append(block)
         block = block.superblock
 
+    # Go though all the blocks from the most outer to the most inner one and
+    # collect all local variable names.
+    local_symbols = {}
     for index, block in enumerate(reversed(blocks)):
-        collect_locals(block, index, local_variables)
+        for i in block:
+            local_symbols[i.name] = i
 
-    set_local_variables(local_variables)
+    # Try to parse every variable, store what works.
+    locals_variables = {}
+    for name, symbol in local_symbols.iteritems():
+        parsed = parse_expression(name, symbol.type)
+        if parsed:
+            locals_variables[name] = parsed
+
+    # Add watches to the variables.
+    watches = {}
+    for i in __watches:
+        parsed = parse_expression(i)
+        if parsed:
+            watches[i] = parsed
+
+    set_variables(locals_variables, watches)
+
+#
+# Entry point
+#
+
+set_variables()
+
+add_watch("g_p")
+# add_watch("p1")
+# add_watch("main")
+# add_watch("?")
+# add_watch(".")
+# add_watch("abc")
 
 # Install GDB hook
 gdb.events.stop.connect(store_locals)
@@ -70,7 +115,7 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
             if url == "/":
                 self.request.sendall(read_file("/home/dyakimen/nokia/debug-helper/client.html"))
             elif url == "/lv":
-                self.request.sendall(json.dumps(get_local_variables()))
+                self.request.sendall(json.dumps(get_variables()))
 
 class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
     def __init__(self, server_address, RequestHandlerClass):

@@ -118,8 +118,9 @@
 
         var POLL_DELAY = 1000;
         var LINE_THICKNESS = 4;
+        var VARIABLE_GROUPS = ["locals", "watches"];
 
-        var variables = {};
+        var variables = _.object(_.map(VARIABLE_GROUPS, function (i) { return [i, {}]; }));
         var current_color = 0;
         var colors = _.shuffle([
             "#000", "#004", "#008", "#00c",
@@ -260,18 +261,18 @@
             }
         }
 
-        function add_variable(id, variable_info) {
+        function add_variable(id, variable_info, group_name) {
             var variable = create_variable_object(variable_info);
 
             // Update UI
-            $("#variable_list").append(variable_row_template(variable_info));
-            $("#name_" + id).click(function () { view_variable(id); });
+            $("#list_of_" + group_name).append(variable_row_template(variable_info));
+            $("#name_" + id).click(function () { view_variable(id, group_name); });
             $("#view_" + id)
                 .button({
                     icons: {primary: "ui-icon-zoomin"},
                     text: false
                 })
-                .click(function () { view_variable(id); });
+                .click(function () { view_variable(id, group_name); });
             $("#pin_" + id)
                 .button({
                     icons: {primary: "ui-icon-pin-s"},
@@ -295,8 +296,8 @@
             return variable;
         }
 
-        function view_variable(id) {
-            map.map.zoomTo(variables[id].shape.getBoundingBox());
+        function view_variable(id, group_name) {
+            map.map.zoomTo(variables[group_name][id].shape.getBoundingBox());
         }
 
         function pin_variable(id) {
@@ -304,8 +305,10 @@
             console.log("Pin: " + id);
         }
 
-        function update_variables(received_data) {
-            var existing_vars = _.keys(variables);
+        function update_variable_group(received_data, group_name) {
+            var variable_group = variables[group_name];
+
+            var existing_vars = _.keys(variable_group);
             var received_vars = _.keys(received_data);
 
             var added_vars = _.difference(received_vars, existing_vars);
@@ -320,18 +323,29 @@
             });
 
             _.each(removed_vars, function (i) {
-                remove_variable(i, variables[i]);
+                remove_variable(i, variable_group[i]);
             });
 
             _.each(updated_vars, function (i) {
-                new_variables[i] = update_variable(i, variables[i], received_data[i]);
+                new_variables[i] = update_variable(i, variable_group[i], received_data[i]);
             });
 
             _.each(added_vars, function (i) {
-                new_variables[i] = add_variable(i, received_data[i]);
+                new_variables[i] = add_variable(i, received_data[i], group_name);
             });
 
-            variables = new_variables;
+            variables[group_name] = new_variables;
+        }
+
+        function update_variables(received_data) {
+            if (!_.isEqual(_.keys(received_data).sort(), VARIABLE_GROUPS)) {
+                console.error("Received data is invalid.");
+                return;
+            }
+
+            _.each(received_data, function(group, name) {
+                update_variable_group(group, name);
+            });
         }
 
         function request_variables() {
@@ -370,11 +384,20 @@
         }
 
         function show_all() {
-            if (!_.isEmpty(variables)) {
-                map.map.zoomTo(nokia.maps.geo.BoundingBox.merge(_.map(variables, function (i) {
-                    return i.shape.getBoundingBox();
-                } )));
+            var non_empty_groups = _.reject(variables, _.isEmpty);
+            if (_.isEmpty(non_empty_groups)) {
+                return;
             }
+
+            map.map.zoomTo(
+                nokia.maps.geo.BoundingBox.merge(
+                    _.map(non_empty_groups, function (i) {
+                        return nokia.maps.geo.BoundingBox.merge(_.map(i, function (i) {
+                            return i.shape.getBoundingBox();
+                        }));
+                    })
+                )
+            );
         }
 
         $(function () {
@@ -429,7 +452,13 @@
             height: 100%;
         }
 
-        #variable_list {
+        .list_header {
+            background-color: #eee;
+            margin: 0;
+            padding: 0.2em;
+        }
+
+        #list_of_locals, #list_of_watches {
             width: 100%;
         }
 
@@ -454,8 +483,14 @@
             <input id="autoupdate" type="checkbox" /><label for="autoupdate">Auto update</label>
             <button id="show_all">Show All</button>
         </div>
-        <table id="variable_list">
-        </table>
+
+        <div id="variables">
+            <p class="list_header">Watches</p>
+            <table id="list_of_watches"></table>
+
+            <p class="list_header">Locals</p>
+            <table id="list_of_locals"></table>
+        </div>
     </div>
 </body>
 </html>
