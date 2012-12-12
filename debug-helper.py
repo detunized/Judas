@@ -6,17 +6,7 @@ import errno
 import select
 import threading
 import SocketServer
-
-# TODO: Hide these properly and lock!
-__variables = {}
-__watches = set()
-
-def set_variables(local_variables = {}, watches = {}):
-    global __variables
-    __variables = {"locals": local_variables, "watches": watches}
-
-def get_variables():
-    return __variables
+import multiprocessing
 
 def parse_type_LatLon(value):
     return [float(value["lat"]), float(value["lon"])]
@@ -26,10 +16,6 @@ def parse_type_Polyline(value):
     start = points["_M_start"]
     size = int(points["_M_finish"] - start)
     return [coord for i in range(size) for coord in parse_type_LatLon(start[i])]
-
-def add_watch(expression):
-    global __watches
-    __watches.add(expression)
 
 def parser_for_type(type):
     return globals().get("parse_type_" + str(type.unqualified()))
@@ -55,6 +41,9 @@ def parse_expression(expression, type = None):
 
     return None
 
+def serialize(local_variables, watches):
+    return json.dumps({"locals": local_variables, "watches": watches})
+
 def store_locals(event):
     # Collect blocks up to the function level.
     blocks = []
@@ -71,36 +60,24 @@ def store_locals(event):
             local_symbols[i.name] = i
 
     # Try to parse every variable, store what works.
-    locals_variables = {}
+    local_variables = {}
     for name, symbol in local_symbols.iteritems():
         parsed = parse_expression(name, symbol.type)
         if parsed:
-            locals_variables[name] = parsed
+            local_variables[name] = parsed
 
     # Add watches to the variables.
     watches = {}
-    for i in __watches:
+    for i in g_watches:
         parsed = parse_expression(i)
         if parsed:
             watches[i] = parsed
 
-    set_variables(locals_variables, watches)
+    send_to_server(serialize(local_variables, watches))
 
-#
-# Entry point
-#
-
-set_variables()
-
-add_watch("g_p")
-# add_watch("p1")
-# add_watch("main")
-# add_watch("?")
-# add_watch(".")
-# add_watch("abc")
-
-# Install GDB hook
-gdb.events.stop.connect(store_locals)
+def add_watch(expression):
+    global g_watches
+    g_watches.add(expression)
 
 def read_file(filename):
     with open(filename, "r") as file:
@@ -115,14 +92,27 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
             if url == "/":
                 self.request.sendall(read_file("/home/dyakimen/nokia/debug-helper/client.html"))
             elif url == "/lv":
-                self.request.sendall(json.dumps(get_variables()))
+                self.request.sendall(g_content_to_serve)
 
 class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
+    # Monkey patch select.select to catch and ignore signals
+    # orig_select = select.select
+    # def my_select(*args, **kwargs):
+    #     while True:
+    #         try:
+    #             ThreadedTCPServer.orig_select(*args, **kwargs)
+    #         except select.error as e:
+    #             print e
+    #             #if e[0] != errno.EINTR:
+    #             raise
+
+    # select.select = my_select
+
     def __init__(self, server_address, RequestHandlerClass):
         self.allow_reuse_address = True
         SocketServer.TCPServer.__init__(self, server_address, RequestHandlerClass)
 
-    def serve_forever(self, poll_interval=0.5):
+    def serve_forever(self, poll_interval = 0.5):
         self._BaseServer__is_shut_down.clear()
         try:
             while not self._BaseServer__shutdown_request:
@@ -132,10 +122,10 @@ class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
                 # shutdown request and wastes cpu at all other times.
                 while True:
                     try:
-                        #r, w, e = select.select([self], [], [], poll_interval)
-                        r, w, e = select.select([self], [], [])
-                    except select.error, v:
-                        if v[0] != errno.EINTR:
+                        r, w, e = select.select([self], [], [], poll_interval)
+                        #r, w, e = select.select([self], [], [])
+                    except select.error as e:
+                        if e[0] != errno.EINTR:
                             raise
                     else:
                         break
@@ -145,10 +135,54 @@ class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
             self._BaseServer__shutdown_request = False
             self._BaseServer__is_shut_down.set()
 
-# Create a server
-server = ThreadedTCPServer(("localhost", 5000), ThreadedTCPRequestHandler)
+def send_to_server(content):
+    g_parent_end.send(content)
 
-# Start the server in a thread
-server_thread = threading.Thread(target = server.serve_forever)
-server_thread.daemon = True
-server_thread.start()
+def start_server(our_end, parent_end):
+    global g_content_to_serve
+
+    # Close parent's end of the pipe
+    parent_end.close()
+
+    # Create the server thread
+    server = ThreadedTCPServer(("localhost", 4000), ThreadedTCPRequestHandler)
+    server_thread = threading.Thread(target = server.serve_forever)
+    server_thread.daemon = True
+    server_thread.start()
+
+    # Wait for data from the parent
+    while True:
+        try:
+            g_content_to_serve = our_end.recv()
+        except IOError as e:
+            if e.errno != errno.EINTR:
+                raise
+        except EOFError as e:
+            # This should happen when the parent's terminated and the pipe got closed
+            server.shutdown()
+            server_thread.join
+            return
+
+#
+# Entry point
+#
+
+# Some globals
+g_content_to_serve = serialize({}, {})
+g_parent_end, g_child_end = multiprocessing.Pipe()
+g_watches = set()
+
+def main():
+    # Create a server
+    server_process = multiprocessing.Process(target = start_server, args = (g_child_end, g_parent_end))
+    server_process.daemon = True
+    server_process.start()
+
+    # Close child's end of the pipe, otherwise the child doesn't receive an error when the parent dies
+    g_child_end.close()
+
+    # Install GDB hook
+    gdb.events.stop.connect(store_locals)
+
+if __name__ == "__main__":
+    main()
