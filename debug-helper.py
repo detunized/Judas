@@ -141,7 +141,7 @@ def send_to_server(content):
 def start_server(our_end, parent_end):
     global g_content_to_serve
 
-    # Close parent's end of the pipe
+    # Close parent's end of the pipe, otherwise we don't get notified when the parent dies
     parent_end.close()
 
     # Create the server thread
