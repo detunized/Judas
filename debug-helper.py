@@ -130,6 +130,54 @@ def start_server(our_end, parent_end):
             return
 
 #
+# Commands
+#
+
+class AddMapWatchCommand(gdb.Command):
+    def __init__(self):
+        super (AddMapWatchCommand, self).__init__("add-map-watch", gdb.COMMAND_DATA)
+
+    def invoke(self, argument, from_tty):
+        if len(argument) > 0:
+            add_watch(argument)
+            store_locals(None)
+
+class ListMapWatchesCommand(gdb.Command):
+    def __init__(self):
+        super (ListMapWatchesCommand, self).__init__("list-map-watches", gdb.COMMAND_DATA)
+
+    def invoke(self, argument, from_tty):
+        for index, watch in enumerate(sorted(g_watches)):
+            print "#%d:" % index, watch
+
+class RemoveMapWatchCommand(gdb.Command):
+    def __init__(self):
+        super (RemoveMapWatchCommand, self).__init__("remove-map-watch", gdb.COMMAND_DATA)
+
+    def invoke(self, argument, from_tty):
+        if len(argument) > 0:
+            original_size = len(g_watches)
+
+            if argument[0] == "#":
+                try:
+                    index = int(argument[1:])
+                    if index < original_size:
+                        g_watches.remove(sorted(g_watches)[index])
+                    else:
+                        print "Index '#%d' is too big" % index
+                except ValueError as e:
+                    print "Invalid index '%s'" % argument
+            elif argument == "*":
+                g_watches.clear()
+            elif argument in g_watches:
+                g_watches.remove(argument)
+            else:
+                print "Map watch '%s' doesn't exist" % argument
+
+            if len(g_watches) != original_size:
+                store_locals(None)
+
+#
 # Entry point
 #
 
@@ -150,6 +198,10 @@ def main():
     # List parsers
     print [i for i in globals().keys() if re.match("^parse_type_", i)]
 
+    # Add commands
+    AddMapWatchCommand()
+    ListMapWatchesCommand()
+    RemoveMapWatchCommand()
 
 # Some globals
 g_content_to_serve = serialize({}, {})
