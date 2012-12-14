@@ -6,15 +6,6 @@ import threading
 import SocketServer
 import multiprocessing
 
-def parse_type_LatLon(value):
-    return [float(value["lat"]), float(value["lon"])]
-
-def parse_type_Polyline(value):
-    points = value["points"]["_M_impl"]
-    start = points["_M_start"]
-    size = int(points["_M_finish"] - start)
-    return [coord for i in range(size) for coord in parse_type_LatLon(start[i])]
-
 def parser_for_type(type):
     return globals().get("parse_type_" + str(type.unqualified()))
 
@@ -153,6 +144,12 @@ def main():
 
     # Install GDB hook
     gdb.events.stop.connect(store_locals)
+
+    execfile("parsers.py", globals())
+
+    # List parsers
+    print [i for i in globals().keys() if re.match("^parse_type_", i)]
+
 
 # Some globals
 g_content_to_serve = serialize({}, {})
