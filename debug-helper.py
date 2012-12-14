@@ -93,45 +93,22 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
                 self.request.sendall(g_content_to_serve)
 
 class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
-    # Monkey patch select.select to catch and ignore signals
-    # orig_select = select.select
-    # def my_select(*args, **kwargs):
-    #     while True:
-    #         try:
-    #             ThreadedTCPServer.orig_select(*args, **kwargs)
-    #         except select.error as e:
-    #             print e
-    #             #if e[0] != errno.EINTR:
-    #             raise
+    # Monkey patch select.select to ignore signals and retry
+    original_select = select.select
 
-    # select.select = my_select
+    def signal_resistant_select(*args, **kwargs):
+        while True:
+            try:
+                return ThreadedTCPServer.original_select(*args, **kwargs)
+            except select.error as e:
+                if e[0] != errno.EINTR:
+                    raise
+
+    select.select = signal_resistant_select
 
     def __init__(self, server_address, RequestHandlerClass):
         self.allow_reuse_address = True
         SocketServer.TCPServer.__init__(self, server_address, RequestHandlerClass)
-
-    def serve_forever(self, poll_interval = 0.5):
-        self._BaseServer__is_shut_down.clear()
-        try:
-            while not self._BaseServer__shutdown_request:
-                # XXX: Consider using another file descriptor or
-                # connecting to the socket to wake this up instead of
-                # polling. Polling reduces our responsiveness to a
-                # shutdown request and wastes cpu at all other times.
-                while True:
-                    try:
-                        r, w, e = select.select([self], [], [], poll_interval)
-                        #r, w, e = select.select([self], [], [])
-                    except select.error as e:
-                        if e[0] != errno.EINTR:
-                            raise
-                    else:
-                        break
-                if self in r:
-                    self._handle_request_noblock()
-        finally:
-            self._BaseServer__shutdown_request = False
-            self._BaseServer__is_shut_down.set()
 
 def send_to_server(content):
     g_parent_end.send(content)
@@ -165,11 +142,6 @@ def start_server(our_end, parent_end):
 # Entry point
 #
 
-# Some globals
-g_content_to_serve = serialize({}, {})
-g_parent_end, g_child_end = multiprocessing.Pipe()
-g_watches = set()
-
 def main():
     # Create a server
     server_process = multiprocessing.Process(target = start_server, args = (g_child_end, g_parent_end))
@@ -181,6 +153,11 @@ def main():
 
     # Install GDB hook
     gdb.events.stop.connect(store_locals)
+
+# Some globals
+g_content_to_serve = serialize({}, {})
+g_parent_end, g_child_end = multiprocessing.Pipe()
+g_watches = set()
 
 if __name__ == "__main__":
     main()
