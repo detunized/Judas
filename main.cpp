@@ -6,6 +6,19 @@ using namespace std;
 namespace test
 {
 
+template <typename T> struct Coord
+{
+    Coord(T lat = 0, T lon = 0)
+        : lat(lat)
+        , lon(lon)
+    {}
+
+    T lat;
+    T lon;
+};
+
+typedef Coord<double> DoubleCoord;
+
 class LatLon
 {
 public:
@@ -35,6 +48,9 @@ void f(LatLon p1 = LatLon(52.5247, 13.4247))
 {
     Polyline line;
     line.add(52.524, 13.423);
+
+    Coord<double> coord(52.524, 13.438);
+    DoubleCoord cd(52.539, 13.438);
 
     int some_int = 0;
     float some_float = some_int + 0.5f;
