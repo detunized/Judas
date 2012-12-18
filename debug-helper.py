@@ -193,10 +193,15 @@ def load_parsers():
             if "parsed_type" in dir(parsers[i])
     }
 
-    # Add reference equivalents
+    # Add reference and pointer equivalents
     for i in parsers.keys():
+        # References
         parsers["%s &" % i] = parsers[i]
         parsers["const %s &" % i] = parsers[i]
+
+        # Pointers
+        parsers["%s *" % i] = lambda value: parsers[i](value.dereference())
+        parsers["const %s *" % i] = lambda value: parsers[i](value.dereference())
 
     g_parsers = parsers
 

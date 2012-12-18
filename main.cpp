@@ -56,6 +56,9 @@ void f(LatLon p1 = LatLon(52.5247, 13.4247))
     LatLon &ref = p1;
     LatLon const &const_ref = p1;
 
+    LatLon *ptr = &p1;
+    LatLon const *const_ptr = &p1;
+
     int some_int = 0;
     float some_float = some_int + 0.5f;
     char *some_string = "Ahoy, there!";
