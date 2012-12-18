@@ -200,8 +200,9 @@ def load_parsers():
         parsers["const %s &" % i] = parsers[i]
 
         # Pointers
-        parsers["%s *" % i] = lambda value: parsers[i](value.dereference())
-        parsers["const %s *" % i] = lambda value: parsers[i](value.dereference())
+        dereference_and_parse = lambda value: parsers[i](value.dereference())
+        parsers["%s *" % i] = dereference_and_parse
+        parsers["const %s *" % i] = dereference_and_parse
 
     g_parsers = parsers
 
