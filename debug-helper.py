@@ -6,11 +6,8 @@ import threading
 import SocketServer
 import multiprocessing
 
-def parser_name_for_type(type):
-    return "parse_type_" + re.sub("[^a-zA-Z0-9_]", "_", str(type.unqualified()))
-
 def parser_for_type(type):
-    return globals().get(parser_name_for_type(type))
+    return g_parsers.get(str(type.unqualified()))
 
 def parse_expression(expression, type = None):
     try:
@@ -184,6 +181,25 @@ class RemoveMapWatchCommand(gdb.Command):
 # Entry point
 #
 
+def load_parsers():
+    global g_parsers
+
+    parsers = {}
+    execfile("parsers.py", parsers)
+
+    parsers = {
+        parsers[i].parsed_type: parsers[i]
+            for i in parsers
+            if "parsed_type" in dir(parsers[i])
+    }
+
+    # Add reference equivalents
+    for i in parsers.keys():
+        parsers["%s &" % i] = parsers[i]
+        parsers["const %s &" % i] = parsers[i]
+
+    g_parsers = parsers
+
 def main():
     # Create a server
     server_process = multiprocessing.Process(target = start_server, args = (g_child_end, g_parent_end))
@@ -196,10 +212,11 @@ def main():
     # Install GDB hook
     gdb.events.stop.connect(store_locals)
 
-    execfile("parsers.py", globals())
+    load_parsers()
 
-    # List parsers
-    print [i for i in globals().keys() if re.match("^parse_type_", i)]
+    print "Supported types:"
+    for i in g_parsers:
+        print " -", i
 
     # Add commands
     AddMapWatchCommand()
@@ -210,6 +227,7 @@ def main():
 g_content_to_serve = serialize({}, {})
 g_parent_end, g_child_end = multiprocessing.Pipe()
 g_watches = set()
+g_parsers = {}
 
 if __name__ == "__main__":
     main()

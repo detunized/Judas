@@ -52,6 +52,10 @@ void f(LatLon p1 = LatLon(52.5247, 13.4247))
     Coord<double> coord(52.524, 13.438);
     DoubleCoord cd(52.539, 13.438);
 
+    LatLon const const_p1 = p1;
+    LatLon &ref = p1;
+    LatLon const &const_ref = p1;
+
     int some_int = 0;
     float some_float = some_int + 0.5f;
     char *some_string = "Ahoy, there!";
