@@ -3,6 +3,9 @@
 
 using namespace std;
 
+namespace test
+{
+
 class LatLon
 {
 public:
@@ -69,8 +72,10 @@ void f(LatLon p1 = LatLon(52.5247, 13.4247))
     cout << "Hello World!" << endl;
 }
 
+}
+
 int main(int argc, char **argv)
 {
-    f();
+    test::f();
     return 0;
 }

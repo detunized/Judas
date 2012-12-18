@@ -6,8 +6,11 @@ import threading
 import SocketServer
 import multiprocessing
 
+def parser_name_for_type(type):
+    return "parse_type_" + re.sub("[^a-zA-Z0-9_]", "_", str(type.unqualified()))
+
 def parser_for_type(type):
-    return globals().get("parse_type_" + str(type.unqualified()))
+    return globals().get(parser_name_for_type(type))
 
 def parse_expression(expression, type = None):
     try:
