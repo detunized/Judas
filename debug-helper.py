@@ -79,7 +79,7 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
         if match:
             url = match.group(1)
             if url == "/":
-                self.request.sendall(read_file("/home/dyakimen/nokia/debug-helper/client.html"))
+                self.request.sendall(read_file("client.html"))
             elif url == "/lv":
                 self.request.sendall(g_content_to_serve)
 
