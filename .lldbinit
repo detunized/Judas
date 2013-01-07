@@ -1,0 +1,4 @@
+script execfile("judas-lldb.py")
+br s -l 89
+run
+#quit
