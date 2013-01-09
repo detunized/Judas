@@ -1,8 +1,10 @@
 import re
+import sys
 import json
 import errno
 import select
 import threading
+import traceback
 import SocketServer
 import multiprocessing
 
@@ -25,6 +27,9 @@ class Value(object):
     def __getitem__(self, key):
         raise NotImplementedError()
 
+    def __float__(self):
+        raise NotImplementedError()
+
     def type(self):
         raise NotImplementedError()
 
@@ -33,6 +38,9 @@ class Value(object):
 
     def dereference(self):
         raise NotImplementedError()
+
+    def unqualified_type(self):
+        return self.type().unqualified()
 
 
 class JsonDebugServer(object):
@@ -64,21 +72,25 @@ class JsonDebugServer(object):
         raise NotImplementedError()
 
     def store_locals(self):
-        # Try to parse every variable, store what works.
-        local_variables = {}
-        for i in self.local_symbols():
-            parsed = self.parse_value(i)
-            if parsed:
-                local_variables[i.name()] = parsed
+        try:
+            # Try to parse every variable, store what works.
+            local_variables = {}
+            for i in self.local_symbols():
+                parsed = self.parse_value(i)
+                if parsed:
+                    local_variables[i.name()] = parsed
 
-        # Add watches to the variables.
-        watches = {}
-        for i in self.watches:
-            parsed = self.parse_expression(i)
-            if parsed:
-                watches[i] = parsed
+            # Add watches to the variables.
+            watches = {}
+            for i in self.watches:
+                parsed = self.parse_expression(i)
+                if parsed:
+                    watches[i] = parsed
 
-        self.send_to_server(self.serialize(local_variables, watches))
+            self.send_to_server(self.serialize(local_variables, watches))
+        except Exception as e:
+            traceback.print_exc()
+            print e
 
     def add_watch(self, expression):
         self.watches.add(expression)
