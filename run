@@ -3,12 +3,7 @@
 if [[ `uname` == "Darwin" ]]; then
     g++ -g -w -o main main.cpp
     lldb main
-    #killall -9 lldb
 else
-    killall -9 gdb
-    gdb -ex "set confirm off" -ex "b 65" -ex "run" debug-helper
-    pidof gdb
-    #killall -9 gdb
-    exit
-    gdb -ex "set confirm off" -ex "b 56" -ex "run" -ex "q" debug-helper
+    echo "python JUDAS_INSTALL_PATH = \"$(pwd)/\"; execfile(JUDAS_INSTALL_PATH + \"judas-gdb.py\")" > .gdbinit
+    gdb --nx --init-command=.gdbinit -ex "set confirm off" -ex "b 89" -ex "run" debug-helper
 fi
