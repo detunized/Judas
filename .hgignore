@@ -1,10 +1,6 @@
 syntax: glob
 
-Makefile
-debug-helper
 main.o
-debug-helper.pro.user
-lldb
 
 .gdbinit
 *.pyc
