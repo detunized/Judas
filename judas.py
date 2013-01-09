@@ -43,7 +43,7 @@ class Value(object):
         return self.type().unqualified()
 
 
-class JsonDebugServer(object):
+class DebugServer(object):
     def parser_for_type(type):
         return self.parsers.get(str(type.unqualified()))
 
@@ -117,7 +117,7 @@ class JsonDebugServer(object):
         def signal_resistant_select(*args, **kwargs):
             while True:
                 try:
-                    return JsonDebugServer.ThreadedTCPServer.original_select(*args, **kwargs)
+                    return DebugServer.ThreadedTCPServer.original_select(*args, **kwargs)
                 except select.error as e:
                     if e[0] != errno.EINTR:
                         raise
@@ -140,7 +140,7 @@ class JsonDebugServer(object):
         parent_end.close()
 
         # Create the server thread
-        server = JsonDebugServer.ThreadedTCPServer(("localhost", 4000), JsonDebugServer.ThreadedTCPRequestHandler, self)
+        server = DebugServer.ThreadedTCPServer(("localhost", 4000), DebugServer.ThreadedTCPRequestHandler, self)
         server_thread = threading.Thread(target = server.serve_forever)
         server_thread.daemon = True
         server_thread.start()
@@ -253,4 +253,3 @@ class JsonDebugServer(object):
         print "Supported types:"
         for i in self.parsers:
             print " -", i
-

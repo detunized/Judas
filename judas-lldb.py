@@ -1,6 +1,9 @@
-import judas
+import sys;
+sys.path.append(JUDAS_INSTALL_PATH)
+from judas import *
 
-class LldbType(judas.Type):
+
+class LldbType(Type):
     def name(self):
         return self.type.name
 
@@ -8,7 +11,7 @@ class LldbType(judas.Type):
         return LldbType(self.type.GetUnqualifiedType())
 
 
-class LldbValue(judas.Value):
+class LldbValue(Value):
     def __getitem__(self, key):
         child = self.value.GetChildMemberWithName(key)
         return LldbValue(child) if child else None
@@ -26,16 +29,16 @@ class LldbValue(judas.Value):
         return LldbValue(self.value.Dereference())
 
 
-class LldbJsonDebugServer(judas.JsonDebugServer):
+class LldbDebugServer(DebugServer):
     def __init__(self):
-        super(LldbJsonDebugServer, self).__init__()
+        super(LldbDebugServer, self).__init__()
 
     def add_command(self, name, handler):
         pass
 
     def install_stop_hook(self, hook):
         self.stop_hook = hook
-        lldb.debugger.HandleCommand("target stop-hook add -o 'script jds.stop_hook()'") # TODO: Fix the hack!
+        lldb.debugger.HandleCommand("target stop-hook add -o 'script __jds__.stop_hook()'") # TODO: Fix the hack!
 
     def local_symbols(self):
         return [LldbValue(i) for i in lldb.frame.get_all_variables()]
@@ -45,4 +48,4 @@ class LldbJsonDebugServer(judas.JsonDebugServer):
         return LldbValue(value) if value.IsValid() else None
 
 
-jds = LldbJsonDebugServer()
+__jds__ = LldbDebugServer()

@@ -1,9 +1,9 @@
 import sys;
-
 sys.path.append(JUDAS_INSTALL_PATH)
-import judas
+from judas import *
 
-class GdbType(judas.Type):
+
+class GdbType(Type):
     def name(self):
         return str(self.type)
 
@@ -11,7 +11,7 @@ class GdbType(judas.Type):
         return GdbType(self.type.unqualified())
 
 
-class GdbValue(judas.Value):
+class GdbValue(Value):
     def __init__(self, value, text):
         super(GdbValue, self).__init__(value)
         self.text = text
@@ -33,7 +33,7 @@ class GdbValue(judas.Value):
         return GdbValue(self.value.dereference(), "*(%s)" % self.text)
 
 
-class GdbJsonDebugServer(judas.JsonDebugServer):
+class GdbDebugServer(DebugServer):
     class Command(gdb.Command):
         def __init__(self, name, handler):
             super(self.__class__, self).__init__(name, gdb.COMMAND_DATA)
@@ -74,4 +74,4 @@ class GdbJsonDebugServer(judas.JsonDebugServer):
         return None
 
 
-jds = GdbJsonDebugServer()
+__jds__ = GdbDebugServer()
