@@ -19,9 +19,6 @@ class LldbValue(judas.Value):
     def type(self):
         return LldbType(self.value.type)
 
-    def unqualified_type(self):
-        return self.type().unqualified()
-
     def name(self):
         return self.value.name
 

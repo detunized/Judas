@@ -1,24 +1,49 @@
+import sys;
+
+sys.path.append(JUDAS_INSTALL_PATH)
 import judas
 
 class GdbType(judas.Type):
-    pass
+    def name(self):
+        return str(self.type)
+
+    def unqualified(self):
+        return GdbType(self.type.unqualified())
 
 
 class GdbValue(judas.Value):
-    pass
+    def __init__(self, value, text):
+        super(GdbValue, self).__init__(value)
+        self.text = text
+
+    def __getitem__(self, key):
+        child = self.value[key]
+        return GdbValue(child, "(%s)[%s]" % (self.text, key)) if child else None
+
+    def __float__(self):
+        return float(self.value)
+
+    def type(self):
+        return GdbType(self.value.type)
+
+    def name(self):
+        return self.text
+
+    def dereference(self):
+        return GdbValue(self.value.dereference(), "*(%s)" % self.text)
 
 
 class GdbJsonDebugServer(judas.JsonDebugServer):
     class Command(gdb.Command):
         def __init__(self, name, handler):
-            super(Command, self).__init__(name, gdb.COMMAND_DATA)
+            super(self.__class__, self).__init__(name, gdb.COMMAND_DATA)
             self.handler = handler
 
         def invoke(self, argument, from_tty):
             self.handler(argument)
 
     def add_command(self, name, handler):
-        Command(name, handler)
+        self.Command(name, handler)
 
     def install_stop_hook(self, hook):
         gdb.events.stop.connect(lambda event: hook())
@@ -38,25 +63,11 @@ class GdbJsonDebugServer(judas.JsonDebugServer):
             for i in block:
                 local_symbols[i.name] = i
 
-        # # Try to parse every variable, store what works.
-        # local_variables = {}
-        # for name, symbol in local_symbols.iteritems():
-        #     parsed = parse_expression(name, symbol.type)
-        #     if parsed:
-        #         local_variables[name] = parsed
-
-        # # Add watches to the variables.
-        # watches = {}
-        # for i in self.g_watches:
-        #     parsed = parse_expression(i)
-        #     if parsed:
-        #         watches[i] = parsed
-
-        return local_symbols
+        return [GdbValue(i.value(gdb.selected_frame()), i.name) for i in local_symbols.values()]
 
     def evaluate_expression(self, expression):
         try:
-            return GdbValue(gdb.parse_and_eval(expression))
+            return GdbValue(gdb.parse_and_eval(expression), expression)
         except gdb.error:
             pass
 
