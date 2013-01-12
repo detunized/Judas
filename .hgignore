@@ -1,6 +1,8 @@
 syntax: glob
 
-main.o
-
-.gdbinit
 *.pyc
+
+example/example
+example/example.dSYM
+example/gdbinit
+example/lldbinit

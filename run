@@ -1,9 +1,9 @@
 #!/bin/sh
 
-if [[ `uname` == "Darwin" ]]; then
-    g++ -g -w -o main main.cpp
-    lldb main
+cd example
+
+if [[ `uname -s` == "Linux" ]]; then
+    make gdb
 else
-    echo "python JUDAS_INSTALL_PATH = \"$(pwd)/\"; execfile(JUDAS_INSTALL_PATH + \"judas-gdb.py\")" > .gdbinit
-    gdb --nx --init-command=.gdbinit -ex "set confirm off" -ex "b 89" -ex "run" debug-helper
+    make lldb
 fi
