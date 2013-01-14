@@ -12,16 +12,9 @@ class GdbType(Type):
 
 
 class GdbValue(Value):
-    def __init__(self, value, text):
+    def __init__(self, value, text = None):
         super(GdbValue, self).__init__(value)
         self.text = text
-
-    def __getitem__(self, key):
-        child = self.value[key]
-        return GdbValue(child, "(%s)[%s]" % (self.text, key)) if child else None
-
-    def __float__(self):
-        return float(self.value)
 
     def type(self):
         return GdbType(self.value.type)
@@ -30,7 +23,20 @@ class GdbValue(Value):
         return self.text
 
     def dereference(self):
-        return GdbValue(self.value.dereference(), "*(%s)" % self.text)
+        return GdbValue(self.value.dereference())
+
+    def __getitem__(self, key):
+        child = self.value[key]
+        return GdbValue(child) if child else None
+
+    def __int__(self):
+        return int(self.value)
+
+    def __long__(self):
+        return long(self.value)
+
+    def __float__(self):
+        return float(self.value)
 
 
 class GdbDebugServer(DebugServer):

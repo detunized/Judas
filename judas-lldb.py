@@ -12,13 +12,6 @@ class LldbType(Type):
 
 
 class LldbValue(Value):
-    def __getitem__(self, key):
-        child = self.value.GetChildMemberWithName(key)
-        return LldbValue(child) if child else None
-
-    def __float__(self):
-        return float(self.value.GetValue())
-
     def type(self):
         return LldbType(self.value.type)
 
@@ -27,6 +20,19 @@ class LldbValue(Value):
 
     def dereference(self):
         return LldbValue(self.value.Dereference())
+
+    def __getitem__(self, key):
+        child = self.value.GetChildMemberWithName(key)
+        return LldbValue(child) if child else None
+
+    def __int__(self):
+        return int(self.value.GetValue())
+
+    def __long__(self):
+        return long(self.value.GetValue())
+
+    def __float__(self):
+        return float(self.value.GetValue())
 
 
 class LldbDebugServer(DebugServer):

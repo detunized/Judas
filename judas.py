@@ -24,12 +24,6 @@ class Value(object):
     def __init__(self, value):
         self.value = value
 
-    def __getitem__(self, key):
-        raise NotImplementedError()
-
-    def __float__(self):
-        raise NotImplementedError()
-
     def type(self):
         raise NotImplementedError()
 
@@ -41,6 +35,36 @@ class Value(object):
 
     def unqualified_type(self):
         return self.type().unqualified()
+
+    def __getitem__(self, key):
+        raise NotImplementedError()
+
+    #
+    # Typecasts
+    #
+
+    def __int__(self):
+        raise NotImplementedError()
+
+    def __long__(self):
+        raise NotImplementedError()
+
+    def __float__(self):
+        raise NotImplementedError()
+
+    #
+    # Arithmetics
+    # These are the same in GDB and LLDB, so they are implemented here.
+    #
+
+    def __add__(self, other):
+        return type(self)(self.value + other.value)
+
+    def __sub__(self, other):
+        return type(self)(self.value - other.value)
+
+    def __mul__(self, other):
+        return type(self)(self.value * other.value)
 
 
 class DebugServer(object):
