@@ -5,7 +5,7 @@ example: example.cpp
 	g++ -g -O0 -w -o example example.cpp
 
 gdbinit:
-	echo "script JUDAS_INSTALL_PATH = \"$(shell pwd)/../\"; execfile(JUDAS_INSTALL_PATH + \"judas-gdb.py\")" > gdbinit
+	echo "python JUDAS_INSTALL_PATH = \"$(shell pwd)/../\"; execfile(JUDAS_INSTALL_PATH + \"judas-gdb.py\")" > gdbinit
 
 .lldbinit:
 	echo "script JUDAS_INSTALL_PATH = \"$(shell pwd)/../\"; execfile(JUDAS_INSTALL_PATH + \"judas-lldb.py\")" > .lldbinit
