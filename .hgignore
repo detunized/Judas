@@ -5,4 +5,4 @@ syntax: glob
 example/example
 example/example.dSYM
 example/gdbinit
-example/lldbinit
+example/.lldbinit
