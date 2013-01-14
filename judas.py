@@ -100,15 +100,24 @@ class DebugServer(object):
             with open(filename, "r") as file:
                 return file.read()
 
+        def send(self, data, format):
+            self.request.sendall(
+                "HTTP/1.1 200 OK\n"
+                "Content-Type: %s; charset=UTF-8\n"
+                "Content-Length: %d\n"
+                "\n"
+                "%s"
+                % (format, len(data), data))
+
         def handle(self):
             data = self.request.recv(4096)
             match = re.match("GET (.*?) HTTP/1\.1", data)
             if match:
                 url = match.group(1)
                 if url == "/":
-                    self.request.sendall(self.read_file("client.html"))
+                    self.send(self.read_file("client.html"), "text/html")
                 elif url == "/lv":
-                    self.request.sendall(self.server.content_to_serve())
+                    self.send(self.server.content_to_serve(), "application/json")
 
     class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
         # Monkey patch select.select to ignore signals and retry
