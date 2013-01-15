@@ -1,10 +1,3 @@
-# TODO: Move this out of here
-def parsed_type(name):
-    def parsed_type_decorator(function):
-        function.parsed_type = name
-        return function
-    return parsed_type_decorator
-
 @parsed_type("test::LatLon")
 def parse_type_test_LatLon(value):
     return [float(value["lat"]), float(value["lon"])]

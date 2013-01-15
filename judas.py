@@ -214,13 +214,25 @@ class DebugServer(object):
     #
 
     def load_parsers(self):
-        parsers = {}
+        # Decorator used in parser declaration
+        #
+        # @parsed_type("ns::Type")
+        # def parse_type_ns_Type(value):
+        #     return float(value["member"])
+
+        def parsed_type(name):
+            def parsed_type_decorator(function):
+                function.parsed_type = name
+                return function
+            return parsed_type_decorator
+
+        parsers = {"parsed_type": parsed_type}
         execfile("parsers.py", parsers)
 
         parsers = {
             parsers[i].parsed_type: parsers[i]
-                for i in parsers
-                if "parsed_type" in dir(parsers[i])
+            for i in parsers
+            if "parsed_type" in dir(parsers[i])
         }
 
         # Add reference and pointer equivalents
