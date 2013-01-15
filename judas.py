@@ -21,13 +21,11 @@ class Type(object):
 
 
 class Value(object):
-    def __init__(self, value):
+    def __init__(self, value, name = None):
         self.value = value
+        self.name = name
 
     def type(self):
-        raise NotImplementedError()
-
-    def name(self):
         raise NotImplementedError()
 
     def dereference(self):
@@ -75,7 +73,7 @@ class DebugServer(object):
         parser = self.parsers.get(value.unqualified_type().name())
         if parser:
             return {
-                "n": value.name(),
+                "n": value.name,
                 "t": value.type().name(),
                 "p": parser(value)
             }
@@ -102,7 +100,7 @@ class DebugServer(object):
             for i in self.local_symbols():
                 parsed = self.parse_value(i)
                 if parsed:
-                    local_variables[i.name()] = parsed
+                    local_variables[i.name] = parsed
 
             # Add watches to the variables.
             watches = {}
@@ -125,13 +123,12 @@ class DebugServer(object):
                 return file.read()
 
         def send(self, data, format):
-            self.request.sendall(
-                "HTTP/1.1 200 OK\n"
-                "Content-Type: %s; charset=UTF-8\n"
-                "Content-Length: %d\n"
-                "\n"
-                "%s"
-                % (format, len(data), data))
+            self.request.sendall("HTTP/1.1 200 OK\n"
+                                 "Content-Type: %s; charset=UTF-8\n"
+                                 "Content-Length: %d\n"
+                                 "\n"
+                                 "%s"
+                                 % (format, len(data), data))
 
         def handle(self):
             data = self.request.recv(4096)

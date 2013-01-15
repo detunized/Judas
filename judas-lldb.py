@@ -15,9 +15,6 @@ class LldbValue(Value):
     def type(self):
         return LldbType(self.value.type)
 
-    def name(self):
-        return self.value.name
-
     def dereference(self):
         return LldbValue(self.value.Dereference())
 
@@ -47,11 +44,11 @@ class LldbDebugServer(DebugServer):
         lldb.debugger.HandleCommand("target stop-hook add -o 'script __jds__.stop_hook()'") # TODO: Fix the hack!
 
     def local_symbols(self):
-        return [LldbValue(i) for i in lldb.frame.get_all_variables()]
+        return [LldbValue(i, i.name) for i in lldb.frame.get_all_variables()]
 
     def evaluate_expression(self, expression):
         value = lldb.frame.EvaluateExpression(expression)
-        return LldbValue(value) if value.IsValid() else None
+        return LldbValue(value, expression) if value.IsValid() else None
 
 
 __jds__ = LldbDebugServer()

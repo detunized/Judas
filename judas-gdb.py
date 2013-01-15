@@ -12,15 +12,8 @@ class GdbType(Type):
 
 
 class GdbValue(Value):
-    def __init__(self, value, text = None):
-        super(GdbValue, self).__init__(value)
-        self.text = text
-
     def type(self):
         return GdbType(self.value.type)
-
-    def name(self):
-        return self.text
 
     def dereference(self):
         return GdbValue(self.value.dereference())
