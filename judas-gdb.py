@@ -31,6 +31,36 @@ class GdbValue(Value):
     def __float__(self):
         return float(self.value)
 
+    def __add__(self, other):
+        return GdbValue(self.value.__add__(self._value(other)))
+
+    def __sub__(self, other):
+        return GdbValue(self.value.__sub__(self._value(other)))
+
+    def __mul__(self, other):
+        return GdbValue(self.value.__mul__(self._value(other)))
+
+    def __floordiv__(self, other):
+        return GdbValue(self.value.__floordiv__(self._value(other)))
+
+    def __mod__(self, other):
+        return GdbValue(self.value.__mod__(self._value(other)))
+
+    def __divmod__(self, other):
+        return GdbValue(self.value.__divmod__(self._value(other)))
+
+    def __div__(self, other):
+        return GdbValue(self.value.__div__(self._value(other)))
+
+    def __truediv__(self, other):
+        return GdbValue(self.value.__truediv__(self._value(other)))
+
+    def _value(self, value_or_something_else):
+        if isinstance(value_or_something_else, GdbValue):
+            return value_or_something_else.value
+        else:
+            return value_or_something_else
+
 
 class GdbDebugServer(DebugServer):
     class Command(gdb.Command):

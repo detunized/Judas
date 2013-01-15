@@ -25,45 +25,30 @@ class Value(object):
         self.value = value
         self.name = name
 
-    def type(self):
-        raise NotImplementedError()
-
-    def dereference(self):
-        raise NotImplementedError()
-
     def unqualified_type(self):
         return self.type().unqualified()
 
-    def __getitem__(self, key):
-        raise NotImplementedError()
-
     #
-    # Typecasts
+    # All of the following methods must be implemented in a base class
     #
 
-    def __int__(self):
-        raise NotImplementedError()
+    def type(self): raise NotImplementedError()
+    def dereference(self): raise NotImplementedError()
 
-    def __long__(self):
-        raise NotImplementedError()
+    def __getitem__(self, key): raise NotImplementedError()
 
-    def __float__(self):
-        raise NotImplementedError()
+    def __int__(self): raise NotImplementedError()
+    def __long__(self): raise NotImplementedError()
+    def __float__(self): raise NotImplementedError()
 
-    #
-    # Arithmetics
-    # These are the same in GDB and LLDB, so they are implemented here.
-    #
-
-    def __add__(self, other):
-        return type(self)(self.value + other.value)
-
-    def __sub__(self, other):
-        return type(self)(self.value - other.value)
-
-    def __mul__(self, other):
-        return type(self)(self.value * other.value)
-
+    def __add__(self, other): raise NotImplementedError()
+    def __sub__(self, other): raise NotImplementedError()
+    def __mul__(self, other): raise NotImplementedError()
+    def __floordiv__(self, other): raise NotImplementedError()
+    def __mod__(self, other): raise NotImplementedError()
+    def __divmod__(self, other): raise NotImplementedError()
+    def __div__(self, other): raise NotImplementedError()
+    def __truediv__(self, other): raise NotImplementedError()
 
 class DebugServer(object):
     def parser_for_type(type):
