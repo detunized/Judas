@@ -351,8 +351,9 @@
         function request_variables() {
             $.ajax({
                 url: "/lv",
+                dataType: "json",
                 success: function (data) {
-                    update_variables(JSON.parse(data));
+                    update_variables(data);
                     if (is_polling_enabled()) {
                         setTimeout(request_variables, POLL_DELAY);
                     }

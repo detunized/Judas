@@ -1,4 +1,8 @@
-Makefile
-debug-helper
-main.o
-debug-helper.pro.user
+syntax: glob
+
+*.pyc
+
+example/example
+example/example.dSYM
+example/gdbinit
+example/.lldbinit

@@ -1,10 +1,3 @@
-# TODO: Move this out of here
-def parsed_type(name):
-    def parsed_type_decorator(function):
-        function.parsed_type = name
-        return function
-    return parsed_type_decorator
-
 @parsed_type("test::LatLon")
 def parse_type_test_LatLon(value):
     return [float(value["lat"]), float(value["lon"])]
@@ -21,4 +14,6 @@ def parse_type_test_Polyline(value):
     return [coord for i in range(size) for coord in parse_type_test_LatLon(start[i])]
 
 # Aliases
-parse_type_test_DoubleCoord = parse_type_test_Coord_double
+@parsed_type("test::DoubleCoord")
+def parse_type_test_DoubleCoord(value):
+    return parse_type_test_Coord_double(value)
