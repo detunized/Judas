@@ -44,12 +44,30 @@ public:
 
 LatLon g_p(52.5237, 13.3037);
 
+//#define BREAKPOINT (std::cout << "");
+#define BREAKPOINT __asm__("int $3");
+#define NOP __asm__("nop");
+
 void f(LatLon p1 = LatLon(52.5247, 13.4247))
 {
+    //@assert: v["watches"]["g_p"]["t"] == "test::LatLon"
+    //@assert: v["watches"]["g_p"]["n"] == "g_p"
+    //@assert: v["watches"]["g_p"]["p"] == [52.5237, 13.3037]
+
     Polyline line;
     line.add(52.524, 13.423);
 
+    //@assert: v["locals"]["line"]["t"] == "test::Polyline"
+    //@assert: v["locals"]["line"]["n"] == "line"
+    //@assert: v["locals"]["line"]["p"] == [52.524, 13.423]
+
     Coord<double> coord(52.524, 13.438);
+
+    //@assert: assert True
+    //@assert: v["locals"]["coord"]["t"] == "Coord<double>"
+    //@assert: v["locals"]["coord"]["n"] == "coord"
+    //@assert: v["locals"]["coord"]["p"] == [52.524, 13.438]
+
     DoubleCoord cd(52.539, 13.438);
 
     LatLon const const_p1 = p1;
@@ -100,5 +118,6 @@ void f(LatLon p1 = LatLon(52.5247, 13.4247))
 int main(int argc, char **argv)
 {
     test::f();
+
     return 0;
 }
