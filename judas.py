@@ -55,13 +55,19 @@ class DebugServer(object):
         return self.parsers.get(str(type.unqualified()))
 
     def parse_value(self, value):
-        parser = self.parsers.get(value.unqualified_type().name())
-        if parser:
-            return {
-                "n": value.name,
-                "t": value.type().name(),
-                "p": parser(value)
-            }
+        try:
+            parser = self.parsers.get(value.unqualified_type().name())
+            if parser:
+                return {
+                    "n": value.name,
+                    "t": value.type().name(),
+                    "p": parser(value)
+                }
+        except:
+            # There's a lot of exceptions thrown around when variables aren't
+            # initialized or have garbage.
+            # TODO: Try no to swallow all the exceptions, just the relevant ones.
+            pass
 
         return None
 
@@ -124,6 +130,8 @@ class DebugServer(object):
                     self.send(self.read_file("client.html"), "text/html")
                 elif url == "/lv":
                     self.send(self.server.content_to_serve(), "application/json")
+                else:
+                    self.request.sendall("HTTP/1.1 404 Not Found\n")
 
     class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
         # Monkey patch select.select to ignore signals and retry
