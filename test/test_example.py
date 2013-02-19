@@ -11,8 +11,7 @@ class Debugger(object):
     debugger_prompt = "\(gdb\) "
 
     def __init__(self, verbose = False):
-        #self.debugger = pexpect.spawn("make gdb", cwd = "../example")
-        self.debugger = pexpect.spawn("""gdb --nx -ex "set height 0" --init-command=gdbinit -ex "set confirm off" ./example""", cwd = "../example")
+        self.debugger = pexpect.spawn("make gdb", cwd = "../example")
         if verbose:
             self.debugger.logfile_read = sys.stdout
         self.wait()
@@ -47,15 +46,16 @@ def test_all():
 
     assertions = {}
     for index, line in enumerate(lines, start = 1):
-        matches = re.match(r"^\s*//\@assert:\s*(.*?)\s*$", line)
+        matches = re.match(r"^\s*CHECK//\s*(.*?)\s*$", line)
         if matches:
             assertions[index] = matches.group(1)
 
+    # TODO: This is potentially O(N^2)
     breakpoints = collections.defaultdict(list)
-    for i in sorted(assertions.keys()):
-        break_on = i + 1
-        while break_on in assertions:
-            break_on += 1
+    for i in assertions.keys():
+        break_on = i
+        while break_on - 1 in assertions:
+            break_on -= 1
         breakpoints[break_on].append(i)
 
     d = Debugger(verbose = False)
@@ -76,9 +76,11 @@ def test_all():
         d.wait()
         if stop_reason == 0:
             v = get_variables()
-            for i in breakpoints[debugger_breakpoints[int(match.group(1))]]:
-                print "Asserting", assertions[i]
-                eval(assertions[i])
+            line = int(match.group(1))
+            if line in debugger_breakpoints:
+                for i in breakpoints[debugger_breakpoints[line]]:
+                    print "Asserting", assertions[i]
+                    assert eval(assertions[i])
             d.send("continue")
         elif stop_reason == 1:
             break
