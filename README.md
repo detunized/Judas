@@ -1,7 +1,7 @@
 Judas
 =====
 
-Judas - (_JDS, JSON Debug Server_) exposes your local variables and watches
+Judas *(from JDS, JSON Debug Server)* exposes your local variables and watches
 from inside of GDB to the outside world in JSON format via HTTP server. Just
 connect with the browser and enjoy.
 
