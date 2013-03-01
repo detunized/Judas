@@ -229,7 +229,7 @@ class DebugServer(object):
     def __init__(self):
         self.content_to_serve = self.serialize({}, {})
         self.parent_end, child_end = multiprocessing.Pipe()
-        self.watches = set(["g_p", "doesnt_exist", "compile error !!!"])
+        self.watches = set()
         self.parsers = {}
 
         # Create a server
