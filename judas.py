@@ -9,65 +9,24 @@ import SocketServer
 import multiprocessing
 
 
-class Type(object):
-    def __init__(self, type):
-        self.type = type
-
-    def name(self):
-        raise NotImplementedError()
-
-    def unqualified(self):
-        raise NotImplementedError()
-
-
-class Value(object):
-    def __init__(self, value, name = None):
-        self.value = value
-        self.name = name
-
-    def unqualified_type(self):
-        return self.type().unqualified()
-
-    #
-    # All of the following methods must be implemented in a base class
-    #
-
-    def type(self): raise NotImplementedError()
-    def dereference(self): raise NotImplementedError()
-
-    def __getitem__(self, key): raise NotImplementedError()
-
-    def __int__(self): raise NotImplementedError()
-    def __long__(self): raise NotImplementedError()
-    def __float__(self): raise NotImplementedError()
-
-    def __add__(self, other): raise NotImplementedError()
-    def __sub__(self, other): raise NotImplementedError()
-    def __mul__(self, other): raise NotImplementedError()
-    def __floordiv__(self, other): raise NotImplementedError()
-    def __mod__(self, other): raise NotImplementedError()
-    def __divmod__(self, other): raise NotImplementedError()
-    def __div__(self, other): raise NotImplementedError()
-    def __truediv__(self, other): raise NotImplementedError()
-
 class DebugServer(object):
     def parser_for_type(type):
         return self.parsers.get(str(type.unqualified()))
 
-    def parse_value(self, value):
+    def parse_value(self, value, name):
         try:
-            parser = self.parsers.get(value.unqualified_type().name())
+            parser = self.parsers.get(str(value.type.unqualified()))
             if parser:
                 return {
-                    "n": value.name,
-                    "t": value.type().name(),
+                    "n": name,
+                    "t": str(value.type),
                     "p": parser(value)
                 }
-        except:
+        except Exception as e:
             # There's a lot of exceptions thrown around when variables aren't
             # initialized or have garbage.
             # TODO: Try no to swallow all the exceptions, just the relevant ones.
-            pass
+            print e
 
         return None
 
@@ -76,7 +35,7 @@ class DebugServer(object):
 
     def parse_expression(self, expression):
         value = self.evaluate_expression(expression)
-        return self.parse_value(value) if value else None
+        return self.parse_value(value, expression) if value else None
 
     def serialize(self, local_variables, watches):
         return json.dumps({"locals": local_variables, "watches": watches})
@@ -88,10 +47,10 @@ class DebugServer(object):
         try:
             # Try to parse every variable, store what works.
             local_variables = {}
-            for i in self.local_symbols():
-                parsed = self.parse_value(i)
+            for (name, value) in self.local_symbols().iteritems():
+                parsed = self.parse_value(value, name)
                 if parsed:
-                    local_variables[i.name] = parsed
+                    local_variables[name] = parsed
 
             # Add watches to the variables.
             watches = {}
@@ -289,64 +248,6 @@ class DebugServer(object):
         for i in self.parsers:
             print " -", i
 
-class GdbType(Type):
-    def name(self):
-        return str(self.type)
-
-    def unqualified(self):
-        return GdbType(self.type.unqualified())
-
-
-class GdbValue(Value):
-    def type(self):
-        return GdbType(self.value.type)
-
-    def dereference(self):
-        return GdbValue(self.value.dereference())
-
-    def __getitem__(self, key):
-        child = self.value[key]
-        return GdbValue(child) if child else None
-
-    def __int__(self):
-        return int(self.value)
-
-    def __long__(self):
-        return long(self.value)
-
-    def __float__(self):
-        return float(self.value)
-
-    def __add__(self, other):
-        return GdbValue(self.value.__add__(self._value(other)))
-
-    def __sub__(self, other):
-        return GdbValue(self.value.__sub__(self._value(other)))
-
-    def __mul__(self, other):
-        return GdbValue(self.value.__mul__(self._value(other)))
-
-    def __floordiv__(self, other):
-        return GdbValue(self.value.__floordiv__(self._value(other)))
-
-    def __mod__(self, other):
-        return GdbValue(self.value.__mod__(self._value(other)))
-
-    def __divmod__(self, other):
-        return GdbValue(self.value.__divmod__(self._value(other)))
-
-    def __div__(self, other):
-        return GdbValue(self.value.__div__(self._value(other)))
-
-    def __truediv__(self, other):
-        return GdbValue(self.value.__truediv__(self._value(other)))
-
-    def _value(self, value_or_something_else):
-        if isinstance(value_or_something_else, GdbValue):
-            return value_or_something_else.value
-        else:
-            return value_or_something_else
-
 class GdbDebugServer(DebugServer):
     class Command(gdb.Command):
         def __init__(self, name, handler):
@@ -372,16 +273,17 @@ class GdbDebugServer(DebugServer):
 
         # Go though all the blocks from the most outer to the most inner one and
         # collect all local variable names.
-        local_symbols = {}
+        symbols = {}
         for index, block in enumerate(reversed(blocks)):
             for i in block:
-                local_symbols[i.name] = i
+                symbols[i.name] = i
 
-        return [GdbValue(i.value(gdb.selected_frame()), i.name) for i in local_symbols.values()]
+        # Evaluate: convert symbols to values.
+        return {name: symbol.value(gdb.selected_frame()) for (name, symbol) in symbols.iteritems()}
 
     def evaluate_expression(self, expression):
         try:
-            return GdbValue(gdb.parse_and_eval(expression), expression)
+            return gdb.parse_and_eval(expression)
         except gdb.error:
             pass
 
