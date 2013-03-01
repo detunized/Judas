@@ -1,6 +1,13 @@
 #include <iostream>
 #include <vector>
 
+// To use:
+// CHECK// Python expression to execute on breakpoint (should evaluate to true)
+//
+// Example:
+// CHECK// type(v["watched"]) is dict
+#define CHECK (std::cout << ""); // Just some NOOP to set a breakpoint on
+
 using namespace std;
 
 namespace test
@@ -43,8 +50,6 @@ public:
 };
 
 LatLon g_p(52.5237, 13.3037);
-
-#define CHECK (std::cout << "");
 
 void f(LatLon p1 = LatLon(52.5247, 13.4247))
 {
