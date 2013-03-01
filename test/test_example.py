@@ -31,7 +31,7 @@ class Debugger(object):
         self.wait(pexpect.EOF)
 
 def get_variables():
-    connection = httplib.HTTPConnection("localhost:4000")
+    connection = httplib.HTTPConnection("localhost:4000") # TODO: Make this configurable
     connection.request("GET", "/lv")
     response = connection.getresponse()
     data = None
@@ -44,12 +44,21 @@ def test_all():
     with open("../example/example.cpp") as f:
         lines = f.readlines()
 
+    # Collect all debugger commands
+    commands = []
+    for index, line in enumerate(lines, start = 1):
+        matches = re.match(r"^\s*DEBUGGER//\s*(.*?)\s*$", line)
+        if matches:
+            commands.append(matches.group(1))
+
+    # Collect all assertions
     assertions = {}
     for index, line in enumerate(lines, start = 1):
         matches = re.match(r"^\s*CHECK//\s*(.*?)\s*$", line)
         if matches:
             assertions[index] = matches.group(1)
 
+    # Collapse breakpoints on consecutive lines into one
     # TODO: This is potentially O(N^2)
     breakpoints = collections.defaultdict(list)
     for i in assertions.keys():
@@ -58,8 +67,15 @@ def test_all():
             break_on -= 1
         breakpoints[break_on].append(i)
 
+    # Start the debugger
     d = Debugger(verbose = False)
 
+    # Execute all commands
+    for i in commands:
+        print "Executing:", i
+        d.step(i)
+
+    # Set all break points
     debugger_breakpoints = {}
     for i in breakpoints.keys():
         d.send("b %d" % i)
@@ -67,9 +83,10 @@ def test_all():
         debugger_breakpoints[int(d.debugger.match.group(1))] = i
         d.wait()
 
-    d.step("jds-list-watches")
+    # Go
     d.send("run")
 
+    # Wait for breakpoints to get hit and assert on expressions associated with them
     while True:
         stop_reason = d.wait(["Breakpoint (\d+), ", "\[Inferior 1 \(process \d+\) exited normally\]"])
         match = d.debugger.match
@@ -79,7 +96,7 @@ def test_all():
             line = int(match.group(1))
             if line in debugger_breakpoints:
                 for i in breakpoints[debugger_breakpoints[line]]:
-                    print "Asserting", assertions[i]
+                    print "Asserting:", assertions[i]
                     assert eval(assertions[i])
             d.send("continue")
         elif stop_reason == 1:

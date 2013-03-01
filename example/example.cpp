@@ -2,11 +2,16 @@
 #include <vector>
 
 // To use:
-// CHECK// Python expression to execute on breakpoint (should evaluate to true)
-//
+//     CHECK// Python expression to execute on breakpoint (should evaluate to true)
 // Example:
-// CHECK// type(v["watched"]) is dict
+//     CHECK// type(v["watched"]) is dict
 #define CHECK (std::cout << ""); // Just some NOOP to set a breakpoint on
+
+// To use:
+//     DEBUGGER// GDB command that would be executed before running the inferior
+// Example:
+//     DEBUGGER// jds-add-watch watch_me
+#define DEBUGGER
 
 using namespace std;
 
@@ -53,6 +58,7 @@ LatLon g_p(52.5237, 13.3037);
 
 void f(LatLon p1 = LatLon(52.5247, 13.4247))
 {
+    CHECK// v["watches"].keys() == ["g_p"]
     CHECK// v["watches"]["g_p"]["t"] == "test::LatLon"
     CHECK// v["watches"]["g_p"]["n"] == "g_p"
     CHECK// v["watches"]["g_p"]["p"] == [52.5237, 13.3037]
@@ -145,6 +151,12 @@ void f(LatLon p1 = LatLon(52.5247, 13.4247))
 
 int main(int argc, char **argv)
 {
+    DEBUGGER// jds-add-watch g_p
+    DEBUGGER// jds-add-watch variable_doesnt_exist
+    DEBUGGER// jds-add-watch this shouln't even compile!
+
+    CHECK// len(v["watches"]) == 0
+
     test::f();
 
     return 0;
