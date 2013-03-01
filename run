@@ -1,9 +1,0 @@
-#!/bin/bash
-
-cd example
-
-if [[ `uname -s` == "Linux" ]]; then
-    make gdb
-else
-    make lldb
-fi
