@@ -37,10 +37,13 @@ class DebugServer(object):
         value = self.evaluate_expression(expression)
         return self.parse_value(value, expression) if value else None
 
-    def serialize(self, local_variables, watches):
-        return json.dumps({"locals": local_variables, "watches": watches})
+    def serialize(self, local_variables, member_variables, watches):
+        return json.dumps({"locals": local_variables, "members": member_variables, "watches": watches})
 
     def local_symbols(self):
+        raise NotImplementedError()
+
+    def member_symbols(self):
         raise NotImplementedError()
 
     def store_locals(self):
@@ -52,6 +55,13 @@ class DebugServer(object):
                 if parsed:
                     local_variables[name] = parsed
 
+            # Do the same for the member variables.
+            member_variables = {}
+            for (name, value) in self.member_symbols().iteritems():
+                parsed = self.parse_value(value, name)
+                if parsed:
+                    member_variables[name] = parsed
+
             # Add watches to the variables.
             watches = {}
             for i in self.watches:
@@ -59,7 +69,7 @@ class DebugServer(object):
                 if parsed:
                     watches[i] = parsed
 
-            self.send_to_server(self.serialize(local_variables, watches))
+            self.send_to_server(self.serialize(local_variables, member_variables, watches))
         except Exception as e:
             traceback.print_exc()
             print e
@@ -227,7 +237,7 @@ class DebugServer(object):
         raise NotImplementedError()
 
     def __init__(self):
-        self.content_to_serve = self.serialize({}, {})
+        self.content_to_serve = self.serialize({}, {}, {})
         self.parent_end, child_end = multiprocessing.Pipe()
         self.watches = set()
         self.parsers = {}
@@ -280,6 +290,16 @@ class GdbDebugServer(DebugServer):
 
         # Evaluate: convert symbols to values.
         return {name: symbol.value(gdb.selected_frame()) for (name, symbol) in symbols.iteritems()}
+
+    def member_symbols(self):
+        members = []
+        try:
+            members = gdb.parse_and_eval("this").dereference().type.fields()
+        except gdb.error:
+            # Not in a class context
+            pass
+
+        return {i.name: gdb.parse_and_eval("(*this).%s" % i.name) for i in members}
 
     def evaluate_expression(self, expression):
         try:

@@ -2,7 +2,7 @@ TODO
 ====
 
  - write better README
- - automatically parse member variables when in a class context
+ - display member variables in the client.html
  - remove hardcoded port
  - fix TODOs in client.html
  - add more TODOs
@@ -11,3 +11,4 @@ TODO
  ====
 
  - use CDNJS for some of the JS
+ - automatically parse member variables when in a class context

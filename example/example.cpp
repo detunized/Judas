@@ -54,6 +54,35 @@ public:
     std::vector<LatLon> points;
 };
 
+class ThisTest
+{
+public:
+    ThisTest()
+        : p1(52.5247, 13.4247)
+        , p2(52.5237, 13.4267)
+        , p3(52.5227, 13.4287)
+    {}
+
+    void member_function()
+    {
+        CHECK// sorted(v["members"].keys()) == ["p1", "p2", "p3"]
+        CHECK// v["members"]["p1"]["t"] == "test::LatLon"
+        CHECK// v["members"]["p1"]["n"] == "p1"
+        CHECK// v["members"]["p1"]["p"] == [52.5247, 13.4247]
+        CHECK// v["members"]["p2"]["t"] == "test::LatLon"
+        CHECK// v["members"]["p2"]["n"] == "p2"
+        CHECK// v["members"]["p2"]["p"] == [52.5237, 13.4267]
+        CHECK// v["members"]["p3"]["t"] == "test::LatLon"
+        CHECK// v["members"]["p3"]["n"] == "p3"
+        CHECK// v["members"]["p3"]["p"] == [52.5227, 13.4287]
+    }
+
+private:
+    LatLon p1;
+    LatLon p2;
+    LatLon p3;
+};
+
 LatLon g_p(52.5237, 13.3037);
 
 void f(LatLon p1 = LatLon(52.5247, 13.4247))
@@ -130,6 +159,8 @@ void f(LatLon p1 = LatLon(52.5247, 13.4247))
         LatLon a(52.5233, 13.4227);
         LatLon b(52.5133, 13.4127);
         LatLon somewhat_longish_variable_name(52.5233, 13.4027);
+
+        ThisTest().member_function();
 
         a.lat += 0.001;
         a.lat += 0.001;
