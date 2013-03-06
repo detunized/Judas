@@ -108,7 +108,7 @@ def test_all():
             line = int(match.group(1))
             if line in debugger_breakpoints:
                 for i in breakpoints[debugger_breakpoints[line]]:
-                    print "Asserting:", assertions[i]
+                    print "Asserting:", assertions[i], "at", debugger_breakpoints[line]
                     try:
                         assert eval(assertions[i])
                     except AssertionError as e:

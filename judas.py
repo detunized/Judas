@@ -299,7 +299,7 @@ class GdbDebugServer(DebugServer):
             # Not in a class context
             pass
 
-        return {i.name: gdb.parse_and_eval("(*this).%s" % i.name) for i in members}
+        return {i.name: gdb.parse_and_eval("(*this).%s" % i.name) for i in members if not i.is_base_class}
 
     def evaluate_expression(self, expression):
         try:

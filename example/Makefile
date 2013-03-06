@@ -9,7 +9,7 @@ gdbinit:
 
 .PHONY: gdb
 gdb: example gdbinit
-	gdb --nx -ex "set height 0" --init-command=gdbinit -ex "set confirm off" -ex "b 89" -ex "run" ./example
+	gdb --nx -ex "set height 0" --init-command=gdbinit -ex "set confirm off" -ex "b 175" -ex "run" ./example
 
 .PHONY: clean
 clean:

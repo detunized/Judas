@@ -83,6 +83,18 @@ private:
     LatLon p3;
 };
 
+class ThisSubclassTest: public ThisTest
+{
+public:
+    void member_function2()
+    {
+        CHECK// sorted(v["members"].keys()) == ["p1"]
+    }
+
+private:
+    LatLon p1;
+};
+
 LatLon g_p(52.5237, 13.3037);
 
 void f(LatLon p1 = LatLon(52.5247, 13.4247))
@@ -160,7 +172,10 @@ void f(LatLon p1 = LatLon(52.5247, 13.4247))
         LatLon b(52.5133, 13.4127);
         LatLon somewhat_longish_variable_name(52.5233, 13.4027);
 
+        cout << ""; // Break here from the makefile
+
         ThisTest().member_function();
+        ThisSubclassTest().member_function2();
 
         a.lat += 0.001;
         a.lat += 0.001;
