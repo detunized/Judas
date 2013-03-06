@@ -1,5 +1,6 @@
 import os
 import re
+import ast
 import sys
 import json
 import time
@@ -39,6 +40,17 @@ def get_variables():
         data = json.loads(response.read())
     connection.close()
     return data
+
+def print_assertion_parts(assertion, v):
+    def evaluate(node, v):
+        return eval(compile(ast.Expression(node), "<string>", "eval"))
+
+    expression = ast.parse(assertion, "<string>", "eval").body
+    if isinstance(expression, ast.Compare):
+        print "  - left side:", evaluate(expression.left, v)
+        for subexpression in expression.comparators:
+            print "  - right side:", evaluate(subexpression, v)
+
 
 def test_all():
     with open("../example/example.cpp") as f:
@@ -97,7 +109,11 @@ def test_all():
             if line in debugger_breakpoints:
                 for i in breakpoints[debugger_breakpoints[line]]:
                     print "Asserting:", assertions[i]
-                    assert eval(assertions[i])
+                    try:
+                        assert eval(assertions[i])
+                    except AssertionError as e:
+                        print_assertion_parts(assertions[i], v)
+                        raise
             d.send("continue")
         elif stop_reason == 1:
             break
