@@ -289,7 +289,9 @@ class GdbDebugServer(DebugServer):
                 symbols[i.name] = i
 
         # Evaluate: convert symbols to values.
-        return {name: symbol.value(gdb.selected_frame()) for (name, symbol) in symbols.iteritems()}
+        # For GDB 7.5 it should be: symbol.value(gdb.selected_frame())
+        # For now use version that works on both 7.4 and 7.5+
+        return {name: gdb.selected_frame().read_var(symbol.name) for (name, symbol) in symbols.iteritems()}
 
     def member_symbols(self):
         members = []
