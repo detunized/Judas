@@ -53,7 +53,7 @@ def print_assertion_parts(assertion, v):
 
 
 def test_all():
-    with open("../examples/geo/example.cpp") as f:
+    with open("../examples/geo/geo.cpp") as f:
         lines = f.readlines()
 
     # Collect all debugger commands

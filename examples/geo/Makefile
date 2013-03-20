@@ -1,16 +1,16 @@
 default:
 	@echo Run "make gdb"
 
-example: example.cpp
-	g++ -g -O0 -w -o example example.cpp
+geo: geo.cpp
+	g++ -g -O0 -w -o geo geo.cpp
 
 gdbinit:
 	echo "python execfile('../../judas.py')" > gdbinit
 
 .PHONY: gdb
-gdb: example gdbinit
-	gdb --nx -ex "set height 0" --command=gdbinit -ex "set confirm off" -ex "b 175" -ex "run" ./example
+gdb: geo gdbinit
+	gdb --nx -ex "set height 0" --command=gdbinit -ex "set confirm off" -ex "b 175" -ex "run" ./geo
 
 .PHONY: clean
 clean:
-	rm -rf example example.dSYM gdbinit
+	rm -rf geo geo.dSYM gdbinit
