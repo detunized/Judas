@@ -1,0 +1,36 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+    <title>Judas Raw Example</title>
+    <meta charset="utf-8" />
+
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+
+    <script>
+        function request_variables() {
+            $.ajax({
+                url: "/lv",
+                dataType: "json",
+                success: function (data) {
+                    console.log(data);
+                    $("#variables").text(JSON.stringify(data, undefined, 4));
+                },
+                error: function (data) {
+                    console.log("Failed to receive data");
+                }
+            });
+        }
+
+        $(function () {
+            setInterval(request_variables, 1000);
+        });
+    </script>
+    <style type="text/css">
+    </style>
+</head>
+<body>
+    <pre id="variables">
+    </pre>
+</body>
+</html>
