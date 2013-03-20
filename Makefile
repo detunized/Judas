@@ -1,4 +1,4 @@
 .PHONY: test
 test:
-	cd example && make example
+	cd examples/geo && make example
 	cd test && py.test -qs

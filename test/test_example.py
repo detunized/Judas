@@ -12,7 +12,7 @@ class Debugger(object):
     debugger_prompt = "\(gdb\) "
 
     def __init__(self, verbose = False):
-        self.debugger = pexpect.spawn("make gdb", cwd = "../example")
+        self.debugger = pexpect.spawn("make gdb", cwd = "../examples/geo")
         if verbose:
             self.debugger.logfile_read = sys.stdout
         self.wait()
@@ -53,7 +53,7 @@ def print_assertion_parts(assertion, v):
 
 
 def test_all():
-    with open("../example/example.cpp") as f:
+    with open("../examples/geo/example.cpp") as f:
         lines = f.readlines()
 
     # Collect all debugger commands

@@ -1,5 +1,5 @@
 *.pyc
 
-example/example
-example/example.dSYM
-example/gdbinit
+examples/geo/example
+examples/geo/example.dSYM
+examples/geo/gdbinit

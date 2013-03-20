@@ -5,7 +5,7 @@ example: example.cpp
 	g++ -g -O0 -w -o example example.cpp
 
 gdbinit:
-	echo "python execfile('../judas.py')" > gdbinit
+	echo "python execfile('../../judas.py')" > gdbinit
 
 .PHONY: gdb
 gdb: example gdbinit
