@@ -3,3 +3,7 @@
 examples/geo/geo
 examples/geo/geo.dSYM
 examples/geo/gdbinit
+
+examples/raw/raw
+examples/raw/raw.dSYM
+examples/raw/gdbinit
