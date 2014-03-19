@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import re
 import sys
 import json
@@ -26,7 +28,7 @@ class DebugServer(object):
             # There's a lot of exceptions thrown around when variables aren't
             # initialized or have garbage.
             # TODO: Try no to swallow all the exceptions, just the relevant ones.
-            print e
+            print(e)
 
         return None
 
@@ -72,7 +74,7 @@ class DebugServer(object):
             self.send_to_server(self.serialize(local_variables, member_variables, watches))
         except Exception as e:
             traceback.print_exc()
-            print e
+            print(e)
 
     def add_watch(self, expression):
         self.watches.add(expression)
@@ -161,7 +163,7 @@ class DebugServer(object):
 
     def command_list_watches(self, argument):
         for index, watch in enumerate(sorted(self.watches)):
-            print "#%d:" % index, watch
+            print("#%d: %s" % (index, watch))
 
     def command_remove_watch(self, argument):
         if len(argument) > 0:
@@ -173,15 +175,15 @@ class DebugServer(object):
                     if index < original_size:
                         self.watches.remove(sorted(self.watches)[index])
                     else:
-                        print "Index '#%d' is too big" % index
+                        print("Index '#%d' is too big" % index)
                 except ValueError as e:
-                    print "Invalid index '%s'" % argument
+                    print("Invalid index '%s'" % argument)
             elif argument == "*":
                 self.watches.clear()
             elif argument in self.watches:
                 self.watches.remove(argument)
             else:
-                print "Map watch '%s' doesn't exist" % argument
+                print("Map watch '%s' doesn't exist" % argument)
 
             if len(self.watches) != original_size:
                 self.store_locals()
@@ -213,7 +215,7 @@ class DebugServer(object):
         }
 
         # Add reference and pointer equivalents
-        for i in parsers.keys():
+        for i in list(parsers.keys()):
             # References
             parsers["%s &" % i] = parsers[i]
             parsers["const %s &" % i] = parsers[i]
@@ -254,9 +256,9 @@ class DebugServer(object):
         self.add_commands()
         self.install_stop_hook(self.store_locals)
 
-        print "Supported types:"
+        print("Supported types:")
         for i in self.parsers:
-            print " -", i
+            print(" - %s" % i)
 
 class GdbDebugServer(DebugServer):
     class Command(gdb.Command):
