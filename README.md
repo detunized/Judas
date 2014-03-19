@@ -8,7 +8,10 @@ connect with the browser and enjoy.
 Installation
 ------------
 
-...
+For Judas hacking:
+
+    $ sudo apt-get g++
+    $ pip install pytest pexpect
 
 
 Example
