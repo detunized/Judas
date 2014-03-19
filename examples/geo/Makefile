@@ -5,7 +5,7 @@ geo: geo.cpp
 	g++ -g -O0 -w -o geo geo.cpp
 
 gdbinit:
-	echo "python execfile('../../judas.py')" > gdbinit
+	echo "python exec(open('../../judas.py').read())" > gdbinit
 
 .PHONY: gdb
 gdb: geo gdbinit
