@@ -209,7 +209,8 @@ class DebugServer(object):
             return parsed_type_decorator
 
         parsers = {"parsed_type": parsed_type}
-        execfile("parsers.py", parsers)
+        with open("parsers.py") as file:
+            exec(file.read()) in parsers
 
         parsers = {
             parsers[i].parsed_type: parsers[i]
