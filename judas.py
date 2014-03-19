@@ -7,8 +7,11 @@ import errno
 import select
 import threading
 import traceback
-import SocketServer
 import multiprocessing
+
+# Python 2/3 compatibility
+try: import socketserver
+except: import SocketServer as socketserver
 
 
 class DebugServer(object):
@@ -79,7 +82,7 @@ class DebugServer(object):
     def add_watch(self, expression):
         self.watches.add(expression)
 
-    class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
+    class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
         def read_file(self, filename):
             with open(filename, "r") as file:
                 return file.read()
@@ -104,7 +107,7 @@ class DebugServer(object):
                 else:
                     self.request.sendall("HTTP/1.1 404 Not Found\n")
 
-    class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
+    class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
         # Monkey patch select.select to ignore signals and retry
         original_select = select.select
 
@@ -121,7 +124,7 @@ class DebugServer(object):
         def __init__(self, server_address, RequestHandlerClass, json_debug_server):
             self.json_debug_server = json_debug_server
             self.allow_reuse_address = True
-            SocketServer.TCPServer.__init__(self, server_address, RequestHandlerClass)
+            socketserver.TCPServer.__init__(self, server_address, RequestHandlerClass)
 
         def content_to_serve(self):
             return self.json_debug_server.content_to_serve
