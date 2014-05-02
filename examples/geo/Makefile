@@ -14,4 +14,4 @@ gdb: geo gdbinit
 
 .PHONY: clean
 clean:
-	rm -rf geo geo.dSYM gdbinit
+	rm -rf geo gdbinit

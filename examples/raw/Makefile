@@ -14,4 +14,4 @@ gdb: raw gdbinit
 
 .PHONY: clean
 clean:
-	rm -rf raw raw.dSYM gdbinit
+	rm -rf raw gdbinit

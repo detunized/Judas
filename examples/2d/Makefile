@@ -14,4 +14,4 @@ gdb: 2d gdbinit
 
 .PHONY: clean
 clean:
-	rm -rf 2d 2d.dSYM gdbinit
+	rm -rf 2d gdbinit
