@@ -19,6 +19,11 @@ if sys.version_info[0] == 3:
 
     def to_bytes(s):
         return s.encode("latin-1")
+
+    def exec_file(filename, context):
+        with open("parsers.py") as file:
+            exec(file.read(), context)
+
 else:
     import SocketServer as socketserver
 
@@ -28,6 +33,9 @@ else:
     def to_bytes(s):
         return s
 
+    def exec_file(filename, context):
+        with open("parsers.py") as file:
+            exec(file.read()) in context
 
 class DebugServer(object):
     def parser_for_type(type):
@@ -223,8 +231,7 @@ class DebugServer(object):
             return parsed_type_decorator
 
         parsers = {"parsed_type": parsed_type}
-        with open("parsers.py") as file:
-            exec(file.read(), parsers)
+        exec_file("parsers.py", parsers)
 
         parsers = {
             parsers[i].parsed_type: parsers[i]
