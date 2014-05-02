@@ -1,0 +1,60 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+    <title>Judas 2D Example</title>
+    <meta charset="utf-8" />
+
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/raphael/2.1.2/raphael-min.js"></script>
+
+    <script>
+        (function () {
+            var paper;
+
+            function show_variables(data) {
+                paper.clear();
+                $.each(data.locals, function (name, info) {
+                    if (info.t == "Point") {
+                        paper
+                            .circle(info.p[0], info.p[1], 5)
+                            .attr({title: info.n, fill: "#000"});
+                    } else if (info.t == "Line") {
+                        paper
+                            .path(["M", info.p[0], info.p[1], "L", info.p[2], info.p[3]])
+                            .attr({title: info.n, stroke: "#000", "stroke-width": 3});
+                    }
+                });
+            }
+
+            function request_variables() {
+                $.ajax({
+                    url: "/lv",
+                    dataType: "json",
+                    success: function (data) {
+                        // TODO: Show watches and members!
+                        show_variables(data);
+                    },
+                    error: function (data) {
+                        console.log("Failed to receive data");
+                    }
+                });
+            }
+
+            $(function () {
+                paper = new Raphael($("#canvas-container"));
+                setInterval(request_variables, 1000);
+            });
+        })();
+    </script>
+    <style type="text/css">
+        #canvas-container {
+            width: 512px;
+            height: 512px;
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+</body>
+</html>

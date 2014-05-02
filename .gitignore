@@ -1,5 +1,9 @@
 *.pyc
 
+examples/2d/2d
+examples/2d/2d.dSYM
+examples/2d/gdbinit
+
 examples/geo/geo
 examples/geo/geo.dSYM
 examples/geo/gdbinit
