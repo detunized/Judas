@@ -9,9 +9,24 @@ import threading
 import traceback
 import multiprocessing
 
-# Python 2/3 compatibility
-try: import socketserver
-except: import SocketServer as socketserver
+# Python 2/3 compatibility layer.
+# Six is not available out of the box on GDB 7.4 so we roll our own.
+if sys.version_info[0] == 3:
+    import socketserver
+
+    def iteritems(d, **kw):
+        return iter(d.items(**kw))
+
+    def to_bytes(s):
+        return s.encode("latin-1")
+else:
+    import SocketServer as socketserver
+
+    def iteritems(d, **kw):
+        return iter(d.iteritems(**kw))
+
+    def to_bytes(s):
+        return s
 
 
 class DebugServer(object):
@@ -55,14 +70,14 @@ class DebugServer(object):
         try:
             # Try to parse every variable, store what works.
             local_variables = {}
-            for (name, value) in self.local_symbols().iteritems():
+            for (name, value) in iteritems(self.local_symbols()):
                 parsed = self.parse_value(value, name)
                 if parsed:
                     local_variables[name] = parsed
 
             # Do the same for the member variables.
             member_variables = {}
-            for (name, value) in self.member_symbols().iteritems():
+            for (name, value) in iteritems(self.member_symbols()):
                 parsed = self.parse_value(value, name)
                 if parsed:
                     member_variables[name] = parsed
@@ -88,24 +103,23 @@ class DebugServer(object):
                 return file.read()
 
         def send(self, data, format):
-            self.request.sendall("HTTP/1.1 200 OK\n"
-                                 "Content-Type: %s; charset=UTF-8\n"
-                                 "Content-Length: %d\n"
-                                 "\n"
-                                 "%s"
-                                 % (format, len(data), data))
+            self.request.sendall(to_bytes("HTTP/1.1 200 OK\n"
+                                          "Content-Type: {0}; charset=UTF-8\n"
+                                          "Content-Length: {1}\n"
+                                          "\n"
+                                          "{2}".format(format, len(data), data)))
 
         def handle(self):
             data = self.request.recv(4096)
-            match = re.match("GET (.*?) HTTP/1\.1", data)
+            match = re.match(b"GET (.*?) HTTP/1\.1", data)
             if match:
                 url = match.group(1)
-                if url == "/":
+                if url == b"/":
                     self.send(self.read_file("client.html"), "text/html")
-                elif url == "/lv":
+                elif url == b"/lv":
                     self.send(self.server.content_to_serve(), "application/json")
                 else:
-                    self.request.sendall("HTTP/1.1 404 Not Found\n")
+                    self.request.sendall(b"HTTP/1.1 404 Not Found\n")
 
     class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
         # Monkey patch select.select to ignore signals and retry
@@ -210,7 +224,7 @@ class DebugServer(object):
 
         parsers = {"parsed_type": parsed_type}
         with open("parsers.py") as file:
-            exec(file.read()) in parsers
+            exec(file.read(), parsers)
 
         parsers = {
             parsers[i].parsed_type: parsers[i]
@@ -297,7 +311,7 @@ class GdbDebugServer(DebugServer):
         # Evaluate: convert symbols to values.
         # For GDB 7.5 it should be: symbol.value(gdb.selected_frame())
         # For now use version that works on both 7.4 and 7.5+
-        return {name: gdb.selected_frame().read_var(symbol.name) for (name, symbol) in symbols.iteritems()}
+        return {name: gdb.selected_frame().read_var(symbol.name) for (name, symbol) in iteritems(symbols)}
 
     def member_symbols(self):
         members = []
