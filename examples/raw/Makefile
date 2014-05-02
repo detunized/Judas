@@ -5,7 +5,7 @@ raw: raw.cpp
 	g++ -g -O0 -w -o raw raw.cpp
 
 gdbinit:
-	echo "python execfile('../../judas.py')" > gdbinit
+	echo "python exec(open('../../judas.py').read())" > gdbinit
 
 .PHONY: gdb
 gdb: raw gdbinit
