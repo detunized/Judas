@@ -1,3 +1,4 @@
+.PHONY: default
 default:
 	@echo Run "make gdb"
 
