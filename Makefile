@@ -4,11 +4,11 @@ export PYTHONDONTWRITEBYTECODE=1
 
 .PHONY: test
 test:
-	make --directory examples/geo build
-	cd test && py.test -qs
+	@$(MAKE) -C examples/geo build
+	@cd test && py.test -qs
 
 .PHONY: examples
 examples:
-	make --directory examples/2d build
-	make --directory examples/geo build
-	make --directory examples/raw build
+	@for i in 2d geo raw; do \
+		$(MAKE) -C examples/$$i build; \
+	done
