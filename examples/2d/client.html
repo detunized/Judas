@@ -23,6 +23,10 @@
                         paper
                             .path(["M", info.p[0][0], info.p[0][1], "L", info.p[1][0], info.p[1][1]])
                             .attr({title: info.n, stroke: "#000", "stroke-width": 3});
+                    } else if (info.t == "Rectangle") {
+                        paper
+                            .rect(info.p[0][0], info.p[0][1], info.p[1][0] - info.p[0][0], info.p[1][1] - info.p[0][1])
+                            .attr({title: info.n, stroke: "#000", "stroke-width": 3});
                     }
                 });
             }

@@ -20,6 +20,17 @@ struct Line
     Point to;
 };
 
+struct Rectangle
+{
+    Rectangle(Point left_top, Point right_bottom)
+        : left_top(left_top)
+        , right_bottom(right_bottom)
+    {}
+
+    Point left_top;
+    Point right_bottom;
+};
+
 int main(int argc, char **argv)
 {
     Point p1(100, 100);
@@ -31,6 +42,8 @@ int main(int argc, char **argv)
     Line l1(Point(150, 150), Point(250, 250));
     l1.to.y -= 50;
     l1.to.x += 100;
+
+    Rectangle r1(Point(120, 110), Point(300, 320));
 
     return 0;
 }
