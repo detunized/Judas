@@ -4,4 +4,4 @@ def parse_type_Point(value):
 
 @parsed_type("Line")
 def parse_type_Line(value):
-    return [int(value["from"]["x"]), int(value["from"]["y"]), int(value["to"]["x"]), int(value["to"]["y"])]
+    return [parse_type_Point(value["from"]), parse_type_Point(value["to"])]

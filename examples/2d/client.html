@@ -21,7 +21,7 @@
                             .attr({title: info.n, fill: "#000"});
                     } else if (info.t == "Line") {
                         paper
-                            .path(["M", info.p[0], info.p[1], "L", info.p[2], info.p[3]])
+                            .path(["M", info.p[0][0], info.p[0][1], "L", info.p[1][0], info.p[1][1]])
                             .attr({title: info.n, stroke: "#000", "stroke-width": 3});
                     }
                 });
