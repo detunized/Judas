@@ -1,0 +1,20 @@
+.PHONY: default
+default:
+	@echo Run "make gdb"
+
+.PHONY: build
+build: $(EXAMPLE_NAME)
+
+.PHONY: gdb
+gdb: $(EXAMPLE_NAME) gdbinit
+	gdb --nx -ex "set height 0" --command=gdbinit -ex "set confirm off" -ex "run" ./$(EXAMPLE_NAME)
+
+gdbinit:
+	echo "python exec(open('../../judas.py').read())" > gdbinit
+
+.PHONY: clean
+clean:
+	rm -rf $(EXAMPLE_NAME) gdbinit
+
+$(EXAMPLE_NAME): $(EXAMPLE_NAME).cpp
+	g++ -g -O0 -w -o $(EXAMPLE_NAME) $(EXAMPLE_NAME).cpp

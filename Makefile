@@ -4,5 +4,11 @@ export PYTHONDONTWRITEBYTECODE=1
 
 .PHONY: test
 test:
-	cd examples/geo && make geo
+	make --directory examples/geo build
 	cd test && py.test -qs
+
+.PHONY: examples
+examples:
+	make --directory examples/2d build
+	make --directory examples/geo build
+	make --directory examples/raw build
