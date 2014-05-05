@@ -9,3 +9,7 @@ def parse_type_Line(value):
 @parsed_type("Rectangle")
 def parse_type_Rectangle(value):
     return [parse_type_Point(value["left_top"]), parse_type_Point(value["right_bottom"])]
+
+@parsed_type("Bezier")
+def parse_type_Bezier(value):
+    return [parse_type_Point(value["p"][i]) for i in range(4)]

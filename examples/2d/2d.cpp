@@ -1,5 +1,10 @@
 struct Point
 {
+    Point()
+        : x(0)
+        , y(0)
+    {}
+
     Point(int x, int y)
         : x(x)
         , y(y)
@@ -31,19 +36,29 @@ struct Rectangle
     Point right_bottom;
 };
 
+struct Bezier
+{
+    Bezier(Point p1, Point p2, Point p3, Point p4)
+    {
+        p[0] = p1;
+        p[1] = p2;
+        p[2] = p3;
+        p[3] = p4;
+    }
+
+    Point p[4];
+};
+
 int main(int argc, char **argv)
 {
-    Point p1(100, 100);
+    Point p1(120, 80);
+    p1.x += 90;
+
+    Line l1(Point(270, 140), Point(180, 260));
+    Rectangle r1(Point(120, 100), Point(300, 320));
+    Bezier b1(Point(120, 100), Point(190, 120), Point(150, 220), Point(300, 320));
 
     asm("int $3"); // break here (on Intel)
-
-    p1.x += 100;
-
-    Line l1(Point(150, 150), Point(250, 250));
-    l1.to.y -= 50;
-    l1.to.x += 100;
-
-    Rectangle r1(Point(120, 110), Point(300, 320));
 
     return 0;
 }
